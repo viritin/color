@@ -12,13 +12,13 @@ public class NamedColorsTest {
     public void testNamedColors() {
 
         // Test the named colors
-        assertEquals(CssColor.parse("#000000"), NamedColor.BLACK.toRgbaColor().toHexColor());
-        assertEquals(CssColor.parse("#FFFFFF"), NamedColor.WHITE.toRgbaColor().toHexColor());
-        assertEquals(CssColor.parse("#FF0000"), NamedColor.RED.toRgbaColor().toHexColor());
-        assertEquals(CssColor.parse("#008000"), NamedColor.GREEN.toRgbaColor().toHexColor());
-        assertEquals(CssColor.parse("#0000FF"), NamedColor.BLUE.toRgbaColor().toHexColor());
-        assertEquals(CssColor.parse("#FFFF00"), NamedColor.YELLOW.toRgbaColor().toHexColor());
-        assertEquals(CssColor.parse("#FF00FF"), NamedColor.MAGENTA.toRgbaColor().toHexColor());
-        assertEquals(CssColor.parse("#00FFFF"), NamedColor.CYAN.toRgbaColor().toHexColor());
+        assertEquals(CssColor.parse("#000000"), NamedColor.BLACK.toRgbColor().toHexColor());
+        assertEquals(CssColor.parse("#FFFFFF"), NamedColor.WHITE.toRgbColor().toHexColor());
+        assertEquals(CssColor.parse("#FF0000"), NamedColor.RED.toRgbColor().toHexColor());
+        assertEquals(CssColor.parse("#008000"), NamedColor.GREEN.toRgbColor().toHexColor());
+        assertEquals(CssColor.parse("#0000FF"), NamedColor.BLUE.toRgbColor().toHexColor());
+        assertEquals(CssColor.parse("#FFFF00"), NamedColor.YELLOW.toRgbColor().toHexColor());
+        assertEquals(CssColor.parse("#FF00FF"), NamedColor.MAGENTA.toRgbColor().toHexColor());
+        assertEquals(CssColor.parse("#00FFFF"), NamedColor.CYAN.toRgbColor().toHexColor());
     }
 }

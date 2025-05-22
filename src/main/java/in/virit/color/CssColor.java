@@ -5,7 +5,12 @@ package in.virit.color;
  */
 public interface CssColor {
 
-    RgbColor toRgbaColor();
+    /**
+     * Converts the CSS color to a basic rgb format.
+     *
+     * @return the color in rgb format.
+     */
+    RgbColor toRgbColor();
 
     /**
      * Parses a CSS color string and returns a Color object.

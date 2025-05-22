@@ -14,6 +14,14 @@ import java.util.Locale;
  */
 public record RgbColor(int r, int g, int b, double a) implements CssColor {
 
+    /**
+     * Basic constructor for RgbColor.
+     *
+     * @param r Red (0-255)
+     * @param g Green (0-255)
+     * @param b Blue (0-255)
+     * @param a Alpha (0-1)
+     */
     public RgbColor {
         if(a < 0 || a > 1) {
             throw new IllegalArgumentException("Alpha value must be between 0 and 1");
@@ -49,11 +57,13 @@ public record RgbColor(int r, int g, int b, double a) implements CssColor {
     }
 
     @Override
-    public RgbColor toRgbaColor() {
+    public RgbColor toRgbColor() {
         return this;
     }
 
     /**
+     * Converts this RGB color to HSL color representation.
+     *
      * @return HSL color representation of this RGB color.
      */
     public HslColor toHslColor() {
@@ -95,6 +105,15 @@ public record RgbColor(int r, int g, int b, double a) implements CssColor {
     }
 
 
+    /**
+     * Parses a CSS color string and returns a RgbColor object.
+     * <p>
+     *     Css variables and calculations are not supported.
+     * </p>
+     *
+     * @param cssColorString the CSS color string to parse
+     * @return a RgbColor object representing the parsed color
+     */
     public static RgbColor of(String cssColorString) {
         // RGB color
         // remove rgb( or rgba( and
@@ -124,6 +143,12 @@ public record RgbColor(int r, int g, int b, double a) implements CssColor {
         int b = parseInteger(parts[2].trim());
         return new RgbColor(r, g, b, alpha);    }
 
+    /**
+     * Creates a new RgbColor with the same RGB values but a different alpha value.
+     *
+     * @param newAlphaValue the new alpha value (0-1)
+     * @return a new RgbColor with the same RGB values but a different alpha value
+     */
     public RgbColor withAlpha(double newAlphaValue) {
         return new RgbColor(r, g, b, newAlphaValue);
     }
@@ -150,6 +175,11 @@ public record RgbColor(int r, int g, int b, double a) implements CssColor {
         }
     }
 
+    /**
+     * Converts this RGB color to a HexColor representation.
+     *
+     * @return HexColor representation of this RGB color.
+     */
     public HexColor toHexColor() {
         String hex = String.format("#%02X%02X%02X", r, g, b);
         if (a < 1.0) {

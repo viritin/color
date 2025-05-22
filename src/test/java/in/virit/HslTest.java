@@ -30,7 +30,7 @@ public class HslTest {
 
         HslColor hslColor = new HslColor(0, 100, 50);
         assertEquals("hsl(0 100 50)", hslColor.toString());
-        RgbColor rgbaColor = hslColor.toRgbaColor();
+        RgbColor rgbaColor = hslColor.toRgbColor();
         assertEquals("rgb(255 0 0)", rgbaColor.toString());
         HslColor hslColor2 = rgbaColor.toHslColor();
         assertEquals("hsl(0 100 50)", hslColor2.toString());
@@ -39,13 +39,13 @@ public class HslTest {
 
         hslColor = new HslColor(300, 100, 50);
         assertEquals("hsl(300 100 50)", hslColor.toString());
-        rgbaColor = hslColor.toRgbaColor();
+        rgbaColor = hslColor.toRgbColor();
         assertEquals("rgb(255 0 255)", rgbaColor.toString());
 
         // Navy	(240°,100%,25%)	#000080	(0,0,128)
         hslColor = new HslColor(240, 100, 25);
         assertEquals("hsl(240 100 25)", hslColor.toString());
-        rgbaColor = hslColor.toRgbaColor();
+        rgbaColor = hslColor.toRgbColor();
         assertEquals("rgb(0 0 128)", rgbaColor.toString());
 
     }

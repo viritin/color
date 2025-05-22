@@ -19,3 +19,6 @@ At least for the initial implementation I didn't pay any attention to performanc
 ## Impl. notes
 
 Hsl conversions are interpreted to Java code by ChatGPT based on this baeldung article: https://www.baeldung.com/cs/convert-color-hsl-rgb
+
+Built with Maven 4, but open to downgrade if needed for potential contributor. For usage Maven 4 should not cause surprises, works fine with Maven 3.x and Gradle 🧸
+

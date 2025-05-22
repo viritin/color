@@ -1,6 +1,5 @@
 package in.virit;
 
-import in.virit.color.HslColor;
 import in.virit.color.NamedColor;
 import in.virit.color.RgbColor;
 import org.junit.jupiter.api.Test;
@@ -33,7 +32,7 @@ public class RgbTest {
 
         assertEquals("rgb(90 100 50 / 0.50)", hslaColor.toString());
 
-        RgbColor rgbaColor = NamedColor.RED.toRgbaColor();
+        RgbColor rgbaColor = NamedColor.RED.toRgbColor();
         assertEquals("rgb(255 0 0)", rgbaColor.toString());
         RgbColor translucentRed = rgbaColor.withAlpha(0.5);
         assertEquals("rgb(255 0 0 / 0.50)", translucentRed.toString());

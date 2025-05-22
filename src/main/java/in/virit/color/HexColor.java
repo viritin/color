@@ -10,12 +10,17 @@ import com.fasterxml.jackson.annotation.JsonValue;
  */
 public record HexColor(String hex) implements CssColor {
 
-    public HexColor(String hex) {
+
+    /**
+     * Basic constructor for HexColor.
+     *
+     * @param hex Hex color string, e.g. #FF5733 or #FF5733FF
+     */
+    public HexColor{
         // Validate the hex color format
         if (hex == null || !hex.matches("^#([0-9A-Fa-f]{8}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$")) {
             throw new IllegalArgumentException("Invalid hex color format: " + hex);
         }
-        this.hex = hex;
     }
 
     @Override
@@ -25,7 +30,7 @@ public record HexColor(String hex) implements CssColor {
     }
 
     @Override
-    public RgbColor toRgbaColor() {
+    public RgbColor toRgbColor() {
         RgbColor rgbColor = new RgbColor(
                 Integer.parseInt(hex.substring(1, 3), 16),
                 Integer.parseInt(hex.substring(3, 5), 16),
@@ -37,6 +42,15 @@ public record HexColor(String hex) implements CssColor {
         return rgbColor;
     }
 
+    /**
+     * Parses a CSS color string and returns a HexColor object.
+     * <p>
+     * Css variables and calculations are not supported.
+     * </p>
+     *
+     * @param cssColorString the CSS color string to parse
+     * @return a HexColor object representing the parsed color
+     */
     public static HexColor of(String cssColorString) {
         return new HexColor(cssColorString);
     }

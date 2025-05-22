@@ -16,6 +16,14 @@ import static in.virit.color.RgbColor.parseAlpha;
  */
 public record HslColor(int h, int s, int l, double a) implements CssColor {
 
+    /**
+     * Constructor for HslColor.
+     *
+     * @param h Hue (0-360)
+     * @param s Saturation (0-100)
+     * @param l Lightness (0-100)
+     * @param a Alpha (0-1), optional, defaults to 1
+     */
     public HslColor {
         if (a < 0 || a > 1) {
             throw new IllegalArgumentException("Alpha value must be between 0 and 1");
@@ -31,6 +39,13 @@ public record HslColor(int h, int s, int l, double a) implements CssColor {
         }
     }
 
+    /**
+     * Constructor without alpha value, defaults to 1.
+     *
+     * @param h Hue (0-360)
+     * @param s Saturation (0-100)
+     * @param l Lightness (0-100)
+     */
     public HslColor(int h, int s, int l) {
         this(h, s, l, 1);
     }
@@ -43,7 +58,7 @@ public record HslColor(int h, int s, int l, double a) implements CssColor {
     }
 
     @Override
-    public RgbColor toRgbaColor() {
+    public RgbColor toRgbColor() {
         double sNorm = s / 100.0;
         double lNorm = l / 100.0;
 
@@ -86,51 +101,117 @@ public record HslColor(int h, int s, int l, double a) implements CssColor {
         return new RgbColor(r, g, b, a);
     }
 
+    /**
+     * Creates a new HslColor with the same hue, saturation and luminance, but a different alpha value.
+     *
+     * @param newAlphaValue the new alpha value (0-1)
+     * @return a new HslColor with the specified alpha value
+     */
     public HslColor withAlpha(double newAlphaValue) {
         return new HslColor(h, s, l, newAlphaValue);
     }
 
+    /**
+     * Creates a new HslColor with the same hue, saturation and alpha, but a different luminance value.
+     *
+     * @param newLuminanceValue the new luminance value (0-100)
+     * @return a new HslColor with the specified luminance value
+     */
     public HslColor withLuminance(int newLuminanceValue) {
         return new HslColor(h, s, newLuminanceValue, a);
     }
 
+    /**
+     * Creates a new HslColor with the same hue, luminance and alpha, but a different saturation value.
+     *
+     * @param newSaturationValue the new saturation value (0-100)
+     * @return a new HslColor with the specified saturation value
+     */
     public HslColor withSaturation(int newSaturationValue) {
         return new HslColor(h, newSaturationValue, l, a);
     }
 
+    /**
+     * Creates a new HslColor with the same saturation, luminance and alpha, but a different hue value.
+     *
+     * @param newHueValue the new hue value (0-360)
+     * @return a new HslColor with the specified hue value
+     */
     public HslColor withHue(int newHueValue) {
         return new HslColor(newHueValue, s, l, a);
     }
 
+    /**
+     * Creates a darker variant of this color by reducing the luminance.
+     *
+     * @param absoluteAmount the absolute amount to reduce the luminance (0-100)
+     * @return a new HslColor with the specified hue value
+     */
     public HslColor darken(int absoluteAmount) {
         int newLuminance = clamp(l - absoluteAmount);
         return new HslColor(h, s, newLuminance, a);
     }
 
+    /**
+     * Creates a darker variant of this color by reducing the luminance.
+     *
+     * @param relativeAmount the relative amount to reduce the luminance (0-1)
+     * @return a new HslColor with the specified hue value
+     */
     public HslColor darken(double relativeAmount) {
         int newLuminance = clamp(l - (l * relativeAmount));
         return new HslColor(h, s, newLuminance, a);
     }
 
+    /**
+     * Creates a lighter variant of this color by increasing the luminance.
+     *
+     * @param absoluteAmount the absolute amount to increase the luminance (0-100)
+     * @return a new HslColor with the specified hue value
+     */
     public HslColor lighten(int absoluteAmount) {
         int newLuminance = clamp(l + absoluteAmount);
         return new HslColor(h, s, newLuminance, a);
     }
 
+    /**
+     * Creates a lighter variant of this color by increasing the luminance.
+     *
+     * @param relativeAmount the relative amount to increase the luminance (0-1)
+     * @return a new HslColor with the specified hue value
+     */
     public HslColor lighten(double relativeAmount) {
         int newLuminance = clamp(l + (l * relativeAmount));
         return new HslColor(h, s, newLuminance, a);
     }
 
+    /**
+     * Creates a more saturated variant of this color by increasing the saturation.
+     *
+     * @param absoluteAmount the absolute amount to increase the saturation (0-100)
+     * @return a new HslColor with the specified hue value
+     */
     public HslColor saturate(int absoluteAmount) {
         return new HslColor(h, clamp(s + absoluteAmount), l, a);
     }
 
+    /**
+     * Creates a more saturated variant of this color by increasing the saturation.
+     *
+     * @param relativeAmount the relative amount to increase the saturation (0-1)
+     * @return a new HslColor with the specified hue value
+     */
     public HslColor saturate(double relativeAmount) {
         int newSaturation = clamp(s + (s * relativeAmount));
         return new HslColor(h, newSaturation, l, a);
     }
 
+    /**
+     * Creates a variant of this color by shifting the hue.
+     *
+     * @param absoluteAmount the absolute amount to shift the hue (0-360)
+     * @return a new HslColor with the specified hue value
+     */
     public HslColor shift(int absoluteAmount) {
         int newHue = (h + absoluteAmount) % 360;
         if (newHue < 0) {
@@ -139,6 +220,11 @@ public record HslColor(int h, int s, int l, double a) implements CssColor {
         return new HslColor(newHue, s, l, a);
     }
 
+    /**
+     * Creates a variant of this color by shifting the hue to the opposite side of the color wheel.
+     *
+     * @return a new HslColor with complemented hue
+     */
     public HslColor complement() {
         int newHue = (h + 180) % 360;
         return new HslColor(newHue, s, l, a);
@@ -154,6 +240,12 @@ public record HslColor(int h, int s, int l, double a) implements CssColor {
         return value;
     }
 
+    /**
+     * Creates a new HslColor from a CSS color string.
+     *
+     * @param cssColorString the CSS color string (e.g. "hsl(120, 100%, 50%)")
+     * @return a new HslColor object
+     */
     public static HslColor of(String cssColorString) {
         // remove hsl( or hsla( and
         cssColorString = cssColorString.replaceAll("hsla?\\(", "");
