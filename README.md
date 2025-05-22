@@ -22,3 +22,4 @@ Hsl conversions are interpreted to Java code by ChatGPT based on this baeldung a
 
 Built with Maven 4, but open to downgrade if needed for potential contributor. For usage Maven 4 should not cause surprises, works fine with Maven 3.x and Gradle 🧸
 
+Maven 4 gotcha with release: had to execute execute org.sonatype.central:central-publishing-maven-plugin:0.7.0:publish manually. Didn't work automatically with release plugin.
