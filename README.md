@@ -20,6 +20,11 @@ At least for the initial implementation I didn't pay any attention to performanc
 
 Hsl conversions are interpreted to Java code by ChatGPT based on this baeldung article: https://www.baeldung.com/cs/convert-color-hsl-rgb
 
+
+## Maven 4 testing notes:
+
+*As this is very simple library, I want to test the Maven 4 with it. 0.0.1 was cut to central with Maven 4.0.0-rc3, but it didn't work perfectly yet (needed manual fiddling to push via central plugin and wrong kind of pom.xml file deployed (4.1.0, consumer pom.xml only somehow separately). Needed to downgrade for now, but development with Maven 4 should work (with some warnings), releases still need version 3. Notes below are outdated.*
+
 Built with Maven 4, but open to downgrade if needed for potential contributor. For usage Maven 4 should not cause surprises, works fine with Maven 3.x and Gradle 🧸
 
 Maven 4 gotcha with release: had to execute execute org.sonatype.central:central-publishing-maven-plugin:0.7.0:publish manually. Didn't work automatically with release plugin.
