@@ -12,7 +12,7 @@ import java.util.Locale;
  * @param b Blue (0-255)
  * @param a Alpha (0-1), optional, defaults to 1
  */
-public record RgbColor(int r, int g, int b, double a) implements CssColor {
+public record RgbColor(int r, int g, int b, double a) implements Color {
 
     /**
      * Basic constructor for RgbColor.
@@ -105,15 +105,20 @@ public record RgbColor(int r, int g, int b, double a) implements CssColor {
     }
 
 
-    /**
-     * Parses a CSS color string and returns a RgbColor object.
-     * <p>
-     *     Css variables and calculations are not supported.
-     * </p>
-     *
-     * @param cssColorString the CSS color string to parse
-     * @return a RgbColor object representing the parsed color
-     */
+    ///
+    /// Parses a CSS color string and returns a RgbColor object. Format can be either the new standard
+    /// or one of the legacy formats. Some examples of valid formats:
+    ///
+    ///  * *rgb(255 255 255 / 0.5)*
+    ///  * *rgb(255 0 0)*
+    ///  * *rgb(255, 0, 0)* (the old style)
+    ///  * *rgba(255, 0, 0, 0.5)* (the old style with alpha channel)
+    ///
+    ///  Css variables and calculations are not currently supported.
+    ///
+    /// @param cssColorString the CSS color string of rgb value to parse
+    /// @return a RgbColor object representing the parsed color
+    ///
     public static RgbColor of(String cssColorString) {
         // RGB color
         // remove rgb( or rgba( and

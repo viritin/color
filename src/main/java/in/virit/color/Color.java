@@ -1,9 +1,14 @@
 package in.virit.color;
 
-/**
- * Represents a CSS color.
- */
-public interface CssColor {
+///
+/// Represents a CSS color.
+///
+///  To create an instance from a CSS string, use the
+///  static {@link #parseCssColor(String)} method or directly on of the "of" methods
+///  of the implementing classes {@link RgbColor}, {@link HexColor}, {@link HslColor}
+///  or {@link NamedColor}.
+///
+public interface Color {
 
     /**
      * Converts the CSS color to a basic rgb format.
@@ -20,7 +25,7 @@ public interface CssColor {
      * @param cssColorString the CSS color string to parse
      * @return a Color object representing the parsed color
      */
-    static CssColor parse(String cssColorString) {
+    static Color parseCssColor(String cssColorString) {
         // Check for named colors
 
         if (cssColorString.startsWith("#")) {

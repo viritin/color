@@ -5,12 +5,12 @@ import com.fasterxml.jackson.annotation.JsonValue;
 /**
  * Represents a named color with its RGBA value.
  * This class is immutable and thread-safe. Instead of using this class directly,
- * you are encouraged to use the static instances from {@link CssColor} interface.
+ * you are encouraged to use the static instances from {@link Color} interface.
  * <p>
  *     The list is taken from MDN.
  * </p>
  */
-public enum NamedColor implements CssColor {
+public enum NamedColor implements Color {
 
     /** Black color (#000000). */
     BLACK("#000000"),

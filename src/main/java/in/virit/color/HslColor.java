@@ -14,7 +14,7 @@ import static in.virit.color.RgbColor.parseAlpha;
  * @param l Lightness (0-100)
  * @param a Alpha (0-1), optional, defaults to 1
  */
-public record HslColor(int h, int s, int l, double a) implements CssColor {
+public record HslColor(int h, int s, int l, double a) implements Color {
 
     /**
      * Constructor for HslColor.
