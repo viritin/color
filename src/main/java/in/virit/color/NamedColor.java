@@ -1,6 +1,5 @@
 package in.virit.color;
 
-import com.fasterxml.jackson.annotation.JsonValue;
 
 /**
  * Represents a named color with its RGBA value.
@@ -316,7 +315,6 @@ public enum NamedColor implements Color {
     }
 
     @Override
-    @JsonValue
     public String toString() {
         return name().toLowerCase();
     }

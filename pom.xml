@@ -11,8 +11,6 @@
         A simple (almost) standalone Java color library, targeted to solutions that use "css colors".
         Typing alone is of course nice for various Java libraries, but there are also trivial conversions
         and calculations implemented.
-        The domain objects contain Jackson annotations so that they are easier to fit into various JSON
-        solutions, so that they by default render as CSS compatible String.
     </description>
     <url>http://github.com/viritin/color/</url>
 
@@ -47,15 +45,8 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
-    
 
     <dependencies>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-            <version>2.19.0</version>
-            <optional>true</optional>
-        </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

@@ -1,7 +1,5 @@
 package in.virit.color;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-
 import java.util.Locale;
 
 /**
@@ -49,7 +47,6 @@ public record RgbColor(int r, int g, int b, double a) implements Color {
     }
 
     @Override
-    @JsonValue
     public String toString() {
         String alpha = a == 1.0 ? "" : String.format(Locale.US, " / %.2f", a);
 
@@ -193,5 +190,26 @@ public record RgbColor(int r, int g, int b, double a) implements Color {
         }
         return new HexColor(hex);
     }
+
+    /**
+     * Returns the legacy RGBA format (commmas instead of spaces).
+     *
+     * @return legacy RGBA format as a string
+     */
+    public String legacyRgba() {
+        // Returns the legacy RGBA format, which is the same as the RGB format
+        // but with alpha value of 1.0 (fully opaque).
+        return "rgba(" + r + ", " + g + ", " + b + ", " + String.format(Locale.US, "%.2f", a) + ")";
+    }
+
+    /**
+     * Returns the legacy RGB format (commmas instead of spaces, no alpha).
+     *
+     * @return legacy RGB format as a string
+     */
+    public String legacyRgb() {
+        return "rgb(" + r + ", " +g + ", " + b + ")";
+    }
+
 
 }

@@ -1,7 +1,5 @@
 package in.virit.color;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-
 ///
 /// Hex color representation. Technically this is RGB(A) color, but prints
 /// as hex string.
@@ -9,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonValue;
 /// @param hex Hex color string, e.g. #FF5733 or #FF5733FF
 ///
 public record HexColor(String hex) implements Color {
-
 
     /**
      * Basic constructor for HexColor.
@@ -21,16 +18,20 @@ public record HexColor(String hex) implements Color {
         if (hex == null || !hex.matches("^#([0-9A-Fa-f]{8}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$")) {
             throw new IllegalArgumentException("Invalid hex color format: " + hex);
         }
+        toRgbColor(hex); // Additional validation that the hex color can be converted to RGB, which it really is
     }
 
     @Override
-    @JsonValue
     public String toString() {
         return hex;
     }
 
     @Override
     public RgbColor toRgbColor() {
+        return toRgbColor(hex);
+    }
+
+    private static RgbColor toRgbColor(String hex) {
         RgbColor rgbColor = new RgbColor(
                 Integer.parseInt(hex.substring(1, 3), 16),
                 Integer.parseInt(hex.substring(3, 5), 16),

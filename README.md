@@ -9,7 +9,6 @@ Inspiration for the project came from a number of [Vaadin Flow](https://vaadin.c
  * Immutability with records, no need to support legacy Java versions
  * Minimal dependencies and module usage (e.g. no `java.desktop` should be needed)
  * Reasonable validations for the input values
- * Jackson configuration for JSON serialization (optional dependency). This is an exception for the above, but Jackson is anyway "everywhere".
  * toString() method returns a CSS color compatible string
  * CSS variables not in scope (would require some sort of context and complicate the design)
  * TODO calculations for parsing

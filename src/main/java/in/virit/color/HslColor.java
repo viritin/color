@@ -1,7 +1,5 @@
 package in.virit.color;
 
-import com.fasterxml.jackson.annotation.JsonValue;
-
 import java.util.Locale;
 
 import static in.virit.color.RgbColor.parseAlpha;
@@ -51,7 +49,6 @@ public record HslColor(int h, int s, int l, double a) implements Color {
     }
 
     @Override
-    @JsonValue
     public String toString() {
         String alpha = a < 1.0f ? String.format(Locale.US, " / %.2f", a) : "";
         return String.format(Locale.US, "hsl(%d %d %d%s)", Math.round(h), Math.round(s), Math.round(l), alpha);
