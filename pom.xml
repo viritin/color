@@ -3,7 +3,7 @@
 
     <groupId>in.virit</groupId>
     <artifactId>color</artifactId>
-    <version>0.0.4-SNAPSHOT</version>
+    <version>0.0.4</version>
     <packaging>jar</packaging>
 
     <name>Color</name>
@@ -31,7 +31,7 @@
         <url>https://github.com/viritin/color</url>
         <connection>scm:git:git://github.com/viritin/color.git</connection>
         <developerConnection>scm:git:ssh://git@github.com:/viritin/color.git</developerConnection>
-        <tag>viritin-2.14.4</tag>
+        <tag>color-0.0.4</tag>
     </scm>
     
     <issueManagement>
