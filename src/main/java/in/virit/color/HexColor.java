@@ -13,7 +13,7 @@ public record HexColor(String hex) implements Color {
      *
      * @param hex Hex color string, e.g. #FF5733 or #FF5733FF
      */
-    public HexColor{
+    public HexColor {
         // Validate the hex color format
         if (hex == null || !hex.matches("^#([0-9A-Fa-f]{8}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$")) {
             throw new IllegalArgumentException("Invalid hex color format: " + hex);
@@ -21,17 +21,14 @@ public record HexColor(String hex) implements Color {
         toRgbColor(hex); // Additional validation that the hex color can be converted to RGB, which it really is
     }
 
-    @Override
-    public String toString() {
-        return hex;
-    }
-
-    @Override
-    public RgbColor toRgbColor() {
-        return toRgbColor(hex);
-    }
-
     private static RgbColor toRgbColor(String hex) {
+        if (hex.length() == 4) {
+            String r = hex.substring(1, 2);
+            String g = hex.substring(2, 3);
+            String b = hex.substring(3, 4);
+            // normalize short form
+            hex = "#" + r + r + g + g + b + b;
+        }
         RgbColor rgbColor = new RgbColor(
                 Integer.parseInt(hex.substring(1, 3), 16),
                 Integer.parseInt(hex.substring(3, 5), 16),
@@ -54,5 +51,15 @@ public record HexColor(String hex) implements Color {
      */
     public static HexColor of(String cssColorString) {
         return new HexColor(cssColorString);
+    }
+
+    @Override
+    public String toString() {
+        return hex;
+    }
+
+    @Override
+    public RgbColor toRgbColor() {
+        return toRgbColor(hex);
     }
 }
