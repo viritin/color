@@ -1,0 +1,28 @@
+<idea-plugin>
+    <id>in.virit.color.swatches</id>
+    <name>Viritin Color</name>
+    <vendor email="matti@vaadin.com" url="https://github.com/viritin/color">Viritin</vendor>
+
+    <description><![CDATA[
+        Color swatches and a color picker for the
+        <a href="https://github.com/viritin/color">Viritin Color</a> Java library
+        (<code>in.virit:color</code>).
+        <ul>
+            <li>Shows a color swatch in the editor gutter next to
+                <code>RgbColor</code>, <code>HexColor</code>, <code>HslColor</code>
+                and <code>NamedColor</code> expressions.</li>
+            <li>Click the swatch to open the standard IDE color picker and
+                rewrite the source to the chosen color.</li>
+            <li>Offers named-color completion (with swatches) wherever a
+                <code>Color</code> is expected.</li>
+        </ul>
+    ]]></description>
+
+    <depends>com.intellij.modules.java</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <colorProvider implementation="in.virit.color.intellij.ColorElementColorProvider"/>
+        <completion.contributor language="JAVA"
+                                implementationClass="in.virit.color.intellij.NamedColorCompletionContributor"/>
+    </extensions>
+</idea-plugin>
