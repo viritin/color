@@ -19,6 +19,22 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <h3>0.2.0</h3>
+        <ul>
+            <li>Color swatches now appear next to each entry in the
+                <code>NamedColor.</code> autocompletion popup (decorating
+                the IDE's native enum completion).</li>
+            <li>Editing a <code>NamedColor.X</code> reference via the picker
+                writes <code>new RgbColor(...)</code> instead of
+                <code>HexColor.of("#...")</code>, and consecutive drags in
+                the picker now apply correctly instead of stalling after
+                the first commit.</li>
+            <li>Picking a transparent color on a 3-arg
+                <code>new RgbColor(r, g, b)</code> or
+                <code>new HslColor(h, s, l)</code> now upgrades the
+                expression to the 4-arg constructor so alpha actually
+                lands in the source.</li>
+        </ul>
         <h3>0.1.2 &mdash; first public release</h3>
         <ul>
             <li>Editor gutter swatches for <code>RgbColor</code>,

@@ -10,17 +10,23 @@ import com.intellij.psi.PsiElementFactory;
 import com.intellij.psi.PsiEnumConstant;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiExpressionList;
+import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
+import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiLiteralExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
 import com.intellij.psi.PsiNewExpression;
 import com.intellij.psi.PsiReferenceExpression;
-import com.intellij.psi.codeStyle.JavaCodeStyleManager;
+import com.intellij.psi.SmartPointerManager;
+import com.intellij.psi.SmartPsiElementPointer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.awt.Color;
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
 
 /**
  * Renders a color swatch in the gutter for expressions using the
@@ -36,6 +42,19 @@ import java.awt.Color;
  * </ul>
  */
 public class ColorElementColorProvider implements ElementColorProvider {
+
+    /**
+     * Tracks element replacements made during a single picker session.
+     *
+     * The platform's ColorLineMarkerProvider captures the original PsiElement in a closure
+     * and calls setColorTo() with that same reference on every picker drag. When we replace
+     * the element wholesale (e.g. NamedColor.X → new RgbColor(...) or RGB 3→4-arg upgrade),
+     * the original PsiElement is invalidated; subsequent calls would otherwise crash on
+     * resolve() or fall silently. We map original → live replacement so the second drag
+     * onward edits the new element in place.
+     */
+    private final Map<PsiElement, SmartPsiElementPointer<? extends PsiElement>> redirects =
+            Collections.synchronizedMap(new WeakHashMap<>());
 
     @Override
     public @Nullable Color getColorFrom(@NotNull PsiElement element) {
@@ -53,10 +72,27 @@ public class ColorElementColorProvider implements ElementColorProvider {
 
     @Override
     public void setColorTo(@NotNull PsiElement element, @NotNull Color color) {
-        Project project = element.getProject();
+        PsiElement live = currentElement(element);
+        if (live == null) return;
+        Project project = live.getProject();
         WriteCommandAction.runWriteCommandAction(project, "Change Color", null, () -> {
-            applyColor(project, element, color);
-        }, element.getContainingFile());
+            PsiElement target = currentElement(element);
+            if (target == null) return;
+            applyColor(project, element, target, color);
+        }, live.getContainingFile());
+    }
+
+    private @Nullable PsiElement currentElement(PsiElement original) {
+        SmartPsiElementPointer<? extends PsiElement> p = redirects.get(original);
+        if (p != null) {
+            PsiElement el = p.getElement();
+            if (el != null && el.isValid()) return el;
+        }
+        return original.isValid() ? original : null;
+    }
+
+    private void recordRedirect(Project project, PsiElement original, PsiElement replacement) {
+        redirects.put(original, SmartPointerManager.getInstance(project).createSmartPsiElementPointer(replacement));
     }
 
     // ----- read --------------------------------------------------------------
@@ -127,19 +163,27 @@ public class ColorElementColorProvider implements ElementColorProvider {
 
     // ----- write -------------------------------------------------------------
 
-    private void applyColor(Project project, PsiElement element, Color color) {
+    private void applyColor(Project project, PsiElement original, PsiElement element, Color color) {
         PsiElementFactory f = JavaPsiFacade.getElementFactory(project);
 
         if (element instanceof PsiNewExpression newExpr) {
             String fqn = qualifiedName(newExpr.getClassReference());
             PsiExpression[] a = argsOf(newExpr);
             if (ColorLib.RGB.equals(fqn) && (a.length == 3 || a.length == 4)) {
+                // Picker introduced alpha into a 3-arg constructor → upgrade to 4-arg form.
+                if (a.length == 3 && color.getAlpha() != 255) {
+                    PsiExpression replacement = f.createExpressionFromText(
+                            "new RgbColor(" + color.getRed() + ", " + color.getGreen() + ", " + color.getBlue() + ", " + alphaStr(color) + ")",
+                            newExpr);
+                    PsiElement inserted = newExpr.replace(replacement);
+                    recordRedirect(project, original, inserted);
+                    return;
+                }
                 replace(a[0], f.createExpressionFromText(String.valueOf(color.getRed()), a[0]));
                 replace(a[1], f.createExpressionFromText(String.valueOf(color.getGreen()), a[1]));
                 replace(a[2], f.createExpressionFromText(String.valueOf(color.getBlue()), a[2]));
                 if (a.length == 4) {
-                    String alpha = String.format(java.util.Locale.US, "%.2f", color.getAlpha() / 255.0);
-                    replace(a[3], f.createExpressionFromText(alpha, a[3]));
+                    replace(a[3], f.createExpressionFromText(alphaStr(color), a[3]));
                 }
                 return;
             }
@@ -149,12 +193,19 @@ public class ColorElementColorProvider implements ElementColorProvider {
             }
             if (ColorLib.HSL.equals(fqn) && (a.length == 3 || a.length == 4)) {
                 int[] hsl = toHsl(color);
+                if (a.length == 3 && color.getAlpha() != 255) {
+                    PsiExpression replacement = f.createExpressionFromText(
+                            "new HslColor(" + hsl[0] + ", " + hsl[1] + ", " + hsl[2] + ", " + alphaStr(color) + ")",
+                            newExpr);
+                    PsiElement inserted = newExpr.replace(replacement);
+                    recordRedirect(project, original, inserted);
+                    return;
+                }
                 replace(a[0], f.createExpressionFromText(String.valueOf(hsl[0]), a[0]));
                 replace(a[1], f.createExpressionFromText(String.valueOf(hsl[1]), a[1]));
                 replace(a[2], f.createExpressionFromText(String.valueOf(hsl[2]), a[2]));
                 if (a.length == 4) {
-                    String alpha = String.format(java.util.Locale.US, "%.2f", color.getAlpha() / 255.0);
-                    replace(a[3], f.createExpressionFromText(alpha, a[3]));
+                    replace(a[3], f.createExpressionFromText(alphaStr(color), a[3]));
                 }
                 return;
             }
@@ -184,11 +235,32 @@ public class ColorElementColorProvider implements ElementColorProvider {
         }
 
         if (element instanceof PsiReferenceExpression ref) {
-            // Replace NamedColor.X with HexColor.of("#...") — type stays Color.
-            PsiExpression replacement = f.createExpressionFromText(
-                    ColorLib.HEX + ".of(\"" + HexUtil.toHex(color) + "\")", ref);
+            // Replace NamedColor.X with new RgbColor(...) — picker rarely lands on a named
+            // color exactly, and RgbColor is the most direct representation of the picked value.
+            //
+            // Use the simple class name (not FQN) in the synthetic expression: putting an FQN
+            // here trips JavaTreeCopyHandler.decodeInformation during replace() — it tries to
+            // resolve the new ref while the tree is still in a DummyHolder. Instead, ensure
+            // the import is present and emit "new RgbColor(...)".
+            ensureImported(project, ref, ColorLib.RGB);
+            String args;
+            if (color.getAlpha() == 255) {
+                args = color.getRed() + ", " + color.getGreen() + ", " + color.getBlue();
+            } else {
+                args = color.getRed() + ", " + color.getGreen() + ", " + color.getBlue() + ", " + alphaStr(color);
+            }
+            PsiExpression replacement = f.createExpressionFromText("new RgbColor(" + args + ")", ref);
             PsiElement inserted = ref.replace(replacement);
-            JavaCodeStyleManager.getInstance(project).shortenClassReferences(inserted);
+            recordRedirect(project, original, inserted);
+        }
+    }
+
+    private static void ensureImported(Project project, PsiElement context, String classFqn) {
+        PsiFile file = context.getContainingFile();
+        if (!(file instanceof PsiJavaFile javaFile)) return;
+        PsiClass cls = JavaPsiFacade.getInstance(project).findClass(classFqn, context.getResolveScope());
+        if (cls != null) {
+            javaFile.importClass(cls); // no-op if already imported or in same package
         }
     }
 
@@ -226,6 +298,10 @@ public class ColorElementColorProvider implements ElementColorProvider {
     private static Color safeRgb(int r, int g, int b, int a) {
         if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255 || a < 0 || a > 255) return null;
         return new Color(r, g, b, a);
+    }
+
+    private static String alphaStr(Color c) {
+        return String.format(java.util.Locale.ROOT, "%.2f", c.getAlpha() / 255.0);
     }
 
     private static @Nullable String stringValue(PsiExpression e) {
