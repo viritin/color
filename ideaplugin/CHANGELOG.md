@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-29
+
 ### Added
 
 - Color swatches now appear next to each entry in the `NamedColor.` autocompletion popup, decorating the IDE's native enum completion.
@@ -25,3 +27,7 @@ First public release.
 - Editor gutter swatches for `RgbColor`, `HexColor`, `HslColor`, `Color.parseCssColor` and `NamedColor.X`.
 - Click the swatch to open the IDE color picker; the source is rewritten in the original shape.
 - Named-color completion with swatch icons in `Color` contexts.
+
+[Unreleased]: https://github.com/viritin/color/compare/0.2.0...HEAD
+[0.2.0]: https://github.com/viritin/color/compare/0.1.2...0.2.0
+[0.1.2]: https://github.com/viritin/color/commits/0.1.2
