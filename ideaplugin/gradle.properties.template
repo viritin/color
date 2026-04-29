@@ -1,0 +1,21 @@
+# Workstation release credentials for the Viritin Color IntelliJ plugin.
+#
+# Copy the four properties below into ~/.gradle/gradle.properties (your
+# personal Gradle config, NOT a file inside this repo). They are read
+# lazily — only signPlugin / publishPlugin demand them; everyday gradle
+# tasks are unaffected if you leave them blank.
+#
+# See RELEASING.md for the one-time setup steps that produce the cert
+# and the marketplace token.
+
+# JetBrains Marketplace upload token.
+# Generate at https://plugins.jetbrains.com → profile → My Tokens.
+marketplaceToken=
+
+# Absolute paths to the signing certificate chain and private key.
+# Keep these outside the repo (e.g. ~/.viritin-color-cert/).
+certificatePath=
+privateKeyPath=
+
+# Passphrase for the private key.
+privateKeyPassword=
