@@ -32,6 +32,11 @@ intellijPlatform {
             untilBuild = provider { null }
         }
     }
+    pluginVerification {
+        ides {
+            recommended()
+        }
+    }
     publishing {
         token = providers.environmentVariable("JETBRAINS_MARKETPLACE_TOKEN")
     }

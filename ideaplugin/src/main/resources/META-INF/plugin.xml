@@ -1,5 +1,5 @@
 <idea-plugin>
-    <id>in.virit.color.swatches</id>
+    <id>in.virit.color</id>
     <name>Viritin Color</name>
     <vendor email="matti@vaadin.com" url="https://github.com/viritin/color">Viritin</vendor>
 
@@ -17,6 +17,19 @@
                 <code>Color</code> is expected.</li>
         </ul>
     ]]></description>
+
+    <change-notes><![CDATA[
+        <h3>0.1.2 &mdash; first public release</h3>
+        <ul>
+            <li>Editor gutter swatches for <code>RgbColor</code>,
+                <code>HexColor</code>, <code>HslColor</code>,
+                <code>Color.parseCssColor</code> and <code>NamedColor.X</code>.</li>
+            <li>Click the swatch to open the IDE color picker; the source is
+                rewritten in the original shape.</li>
+            <li>Named-color completion with swatch icons in <code>Color</code>
+                contexts.</li>
+        </ul>
+    ]]></change-notes>
 
     <depends>com.intellij.modules.java</depends>
 
