@@ -1,4 +1,4 @@
-# CssColor library for Java
+# (Css)Color library for Java
 
 Typing is the Java thing and CSS is the web thing. CSS colors have been adopted by a lot of things. This library provides a way to use CSS colors in Java code. It is a simple library that allows you to create and manipulate CSS colors in Java, for better type safety, developer experience and security.
 
