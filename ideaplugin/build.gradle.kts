@@ -9,7 +9,6 @@ group = "in.virit"
 // version is sourced from gradle.properties so net.researchgate.release can rewrite it.
 
 repositories {
-    mavenLocal()
     mavenCentral()
     intellijPlatform {
         defaultRepositories()
@@ -19,7 +18,7 @@ repositories {
 dependencies {
     // Bundle the Viritin Color library so the plugin can use its CSS Color 4
     // math directly for swatch rendering (HwbColor / LabColor / OklchColor / etc.).
-    implementation("in.virit:color:0.0.5-SNAPSHOT")
+    implementation("in.virit:color:0.0.5")
 
     intellijPlatform {
         intellijIdea("2026.1.1")
