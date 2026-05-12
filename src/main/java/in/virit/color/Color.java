@@ -4,9 +4,10 @@ package in.virit.color;
 /// Represents a CSS color.
 ///
 ///  To create an instance from a CSS string, use the
-///  static {@link #parseCssColor(String)} method or directly on of the "of" methods
-///  of the implementing classes {@link RgbColor}, {@link HexColor}, {@link HslColor}
-///  or {@link NamedColor}.
+///  static {@link #parseCssColor(String)} method or directly one of the "of" methods
+///  of the implementing classes {@link RgbColor}, {@link HexColor}, {@link HslColor},
+///  {@link NamedColor}, {@link HwbColor}, {@link LabColor}, {@link LchColor},
+///  {@link OklabColor}, {@link OklchColor} or {@link ColorFunction}.
 ///
 public interface Color {
 
@@ -18,26 +19,39 @@ public interface Color {
     RgbColor toRgbColor();
 
     /**
-     * Parses a CSS color string and returns a Color object.
+     * Parses a CSS color string and returns a Color object. Supports:
+     * {@code #hex}, {@code rgb()/rgba()}, {@code hsl()/hsla()}, {@code hwb()},
+     * {@code lab()}, {@code lch()}, {@code oklab()}, {@code oklch()},
+     * {@code color()} with predefined spaces, and CSS named colors.
      * <p>
-     *     Css variables and calculations are not supported.
+     *     CSS variables, {@code none} keyword, {@code color-mix()} and relative
+     *     color syntax are not supported.
      * </p>
      * @param cssColorString the CSS color string to parse
      * @return a Color object representing the parsed color
      */
     static Color parseCssColor(String cssColorString) {
-        // Check for named colors
-
-        if (cssColorString.startsWith("#")) {
-            // Hex color
-            return HexColor.of(cssColorString);
-        } else if (cssColorString.startsWith("rgb")) {
-            return RgbColor.of(cssColorString);
-        } else if (cssColorString.startsWith("hsl")) {
-            // HSL color
-            return HslColor.of(cssColorString);
+        String s = cssColorString.trim();
+        if (s.startsWith("#")) {
+            return HexColor.of(s);
+        } else if (s.startsWith("rgb")) {
+            return RgbColor.of(s);
+        } else if (s.startsWith("hsl")) {
+            return HslColor.of(s);
+        } else if (s.startsWith("hwb")) {
+            return HwbColor.of(s);
+        } else if (s.startsWith("oklab")) {
+            return OklabColor.of(s);
+        } else if (s.startsWith("oklch")) {
+            return OklchColor.of(s);
+        } else if (s.startsWith("lab")) {
+            return LabColor.of(s);
+        } else if (s.startsWith("lch")) {
+            return LchColor.of(s);
+        } else if (s.startsWith("color(")) {
+            return ColorFunction.of(s);
         } else {
-            return NamedColor.of(cssColorString);
+            return NamedColor.of(s);
         }
     }
 

@@ -3,8 +3,15 @@ package in.virit;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import in.virit.color.Color;
+import in.virit.color.ColorFunction;
+import in.virit.color.HwbColor;
+import in.virit.color.LabColor;
+import in.virit.color.LchColor;
+import in.virit.color.OklabColor;
+import in.virit.color.OklchColor;
 
 public class ParsingTest {
 
@@ -60,6 +67,17 @@ public class ParsingTest {
             Color.parseCssColor("hsl(0 99% 1 / -0.5)"); // alpha out of range
         });
 
+    }
+
+    @Test
+    void testCssColor4Dispatch() {
+        assertInstanceOf(HwbColor.class, Color.parseCssColor("hwb(0 0% 0%)"));
+        assertInstanceOf(LabColor.class, Color.parseCssColor("lab(50 20 -30)"));
+        assertInstanceOf(LchColor.class, Color.parseCssColor("lch(50 30 120)"));
+        // oklab/oklch must dispatch before lab/lch despite shared substrings
+        assertInstanceOf(OklabColor.class, Color.parseCssColor("oklab(0.5 0.1 -0.1)"));
+        assertInstanceOf(OklchColor.class, Color.parseCssColor("oklch(0.5 0.2 120)"));
+        assertInstanceOf(ColorFunction.class, Color.parseCssColor("color(display-p3 1 0 0)"));
     }
 
 }
