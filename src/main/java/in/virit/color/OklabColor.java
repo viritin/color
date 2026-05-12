@@ -71,6 +71,8 @@ public record OklabColor(double l, double a, double b, double alpha) implements 
     }
 
     /**
+     * Returns a copy of this color with a different alpha value.
+     *
      * @param newAlpha new alpha (0–1)
      * @return new OklabColor with the given alpha
      */

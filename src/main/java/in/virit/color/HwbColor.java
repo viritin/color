@@ -94,6 +94,8 @@ public record HwbColor(double h, double w, double b, double alpha) implements Co
     }
 
     /**
+     * Returns a copy of this color with a different alpha value.
+     *
      * @param newAlpha new alpha (0–1)
      * @return new HwbColor with the given alpha
      */

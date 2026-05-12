@@ -66,6 +66,8 @@ public record LchColor(double l, double c, double h, double alpha) implements Co
     }
 
     /**
+     * Returns a copy of this color with a different alpha value.
+     *
      * @param newAlpha new alpha (0–1)
      * @return new LchColor with the given alpha
      */

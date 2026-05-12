@@ -17,6 +17,13 @@ public final class ColorMath {
 
     // ---------- sRGB gamma ----------
 
+    /**
+     * Applies the sRGB transfer function (gamma encoding) to a linear sRGB
+     * component, mapping {@code [0, 1]} to gamma-encoded {@code [0, 1]}.
+     *
+     * @param v linear sRGB value (may be outside {@code [0, 1]} for wide-gamut inputs)
+     * @return gamma-encoded sRGB value
+     */
     public static double linearSrgbToSrgb(double v) {
         double sign = v < 0 ? -1 : 1;
         double abs = Math.abs(v);
@@ -26,6 +33,13 @@ public final class ColorMath {
         return sign * (1.055 * Math.pow(abs, 1.0 / 2.4) - 0.055);
     }
 
+    /**
+     * Inverts the sRGB transfer function, mapping a gamma-encoded sRGB component
+     * to its linear-light value.
+     *
+     * @param v gamma-encoded sRGB value (typically {@code [0, 1]})
+     * @return linear-light sRGB value
+     */
     public static double srgbToLinearSrgb(double v) {
         double sign = v < 0 ? -1 : 1;
         double abs = Math.abs(v);
@@ -55,6 +69,14 @@ public final class ColorMath {
     private static final double LAB_K = 24389.0 / 27.0;
     private static final double LAB_E = 216.0 / 24389.0;
 
+    /**
+     * Converts a CIELAB triple to CIE XYZ at the D50 white point.
+     *
+     * @param L lightness (0–100)
+     * @param a green–red axis
+     * @param b blue–yellow axis
+     * @return XYZ-D50 tristimulus values as {@code [X, Y, Z]}
+     */
     public static double[] labToXyzD50(double L, double a, double b) {
         double f1 = (L + 16) / 116;
         double f0 = a / 500 + f1;
@@ -77,6 +99,14 @@ public final class ColorMath {
             { 0.012314001688319899, -0.020507696433477912, 1.3303659366080753 }
     };
 
+    /**
+     * Chromatic adaptation from XYZ-D50 to XYZ-D65 using the Bradford transform.
+     *
+     * @param x XYZ-D50 X
+     * @param y XYZ-D50 Y
+     * @param z XYZ-D50 Z
+     * @return XYZ-D65 tristimulus values as {@code [X, Y, Z]}
+     */
     public static double[] xyzD50ToXyzD65(double x, double y, double z) {
         return mul(BRADFORD_D50_TO_D65, x, y, z);
     }
@@ -88,12 +118,28 @@ public final class ColorMath {
             {  0.05563007969699366, -0.20397695888897652,  1.0569715142428786 }
     };
 
+    /**
+     * Converts XYZ-D65 tristimulus values to linear sRGB.
+     *
+     * @param x XYZ-D65 X
+     * @param y XYZ-D65 Y
+     * @param z XYZ-D65 Z
+     * @return linear sRGB as {@code [R, G, B]} (may be outside {@code [0, 1]} when out of gamut)
+     */
     public static double[] xyzD65ToLinearSrgb(double x, double y, double z) {
         return mul(XYZ_D65_TO_LIN_SRGB, x, y, z);
     }
 
     // ---------- OKLab ----------
 
+    /**
+     * Converts an OKLab triple to linear sRGB using Björn Ottosson's matrices.
+     *
+     * @param L lightness (0–1)
+     * @param a green–red axis
+     * @param b blue–yellow axis
+     * @return linear sRGB as {@code [R, G, B]}
+     */
     public static double[] oklabToLinearSrgb(double L, double a, double b) {
         double l_ = L + 0.3963377774 * a + 0.2158037573 * b;
         double m_ = L - 0.1055613458 * a - 0.0638541728 * b;
@@ -119,6 +165,14 @@ public final class ColorMath {
             { 0.0,                0.04511338185890264, 1.043944368900976 }
     };
 
+    /**
+     * Converts a gamma-encoded Display P3 (D65) triple to linear sRGB.
+     *
+     * @param r gamma-encoded Display P3 red (typically 0–1)
+     * @param g gamma-encoded Display P3 green (typically 0–1)
+     * @param b gamma-encoded Display P3 blue (typically 0–1)
+     * @return linear sRGB as {@code [R, G, B]} (may be out of gamut)
+     */
     public static double[] displayP3ToLinearSrgb(double r, double g, double b) {
         // Display P3 uses sRGB transfer function
         double lr = srgbToLinearSrgb(r);
@@ -135,6 +189,14 @@ public final class ColorMath {
             { 0.02703136138502536, 0.07068885253582723, 0.9913375368376388 }
     };
 
+    /**
+     * Converts a gamma-encoded Adobe RGB 1998 (D65) triple to linear sRGB.
+     *
+     * @param r gamma-encoded A98 red
+     * @param g gamma-encoded A98 green
+     * @param b gamma-encoded A98 blue
+     * @return linear sRGB as {@code [R, G, B]} (may be out of gamut)
+     */
     public static double[] a98RgbToLinearSrgb(double r, double g, double b) {
         // Adobe RGB transfer: simple gamma 2.19921875
         double exp = 563.0 / 256.0;
@@ -152,6 +214,14 @@ public final class ColorMath {
             { 0.000000000000000,  0.028072693049087428, 1.060985057710791 }
     };
 
+    /**
+     * Converts a gamma-encoded Rec.2020 (D65) triple to linear sRGB.
+     *
+     * @param r gamma-encoded Rec.2020 red
+     * @param g gamma-encoded Rec.2020 green
+     * @param b gamma-encoded Rec.2020 blue
+     * @return linear sRGB as {@code [R, G, B]} (may be out of gamut)
+     */
     public static double[] rec2020ToLinearSrgb(double r, double g, double b) {
         // Rec.2020 transfer function (BT.2020)
         final double alpha = 1.09929682680944;
@@ -179,6 +249,15 @@ public final class ColorMath {
             { 0.0,                 0.0,                 0.8251046025104602 }
     };
 
+    /**
+     * Converts a gamma-encoded ProPhoto RGB (D50) triple to linear sRGB,
+     * applying Bradford D50 → D65 chromatic adaptation.
+     *
+     * @param r gamma-encoded ProPhoto red
+     * @param g gamma-encoded ProPhoto green
+     * @param b gamma-encoded ProPhoto blue
+     * @return linear sRGB as {@code [R, G, B]} (may be out of gamut)
+     */
     public static double[] prophotoRgbToLinearSrgb(double r, double g, double b) {
         // ProPhoto: gamma 1.8 with small linear segment near zero
         double lr = prophotoLinearize(r);
@@ -200,6 +279,12 @@ public final class ColorMath {
 
     // ---------- Output helpers ----------
 
+    /**
+     * Scales a normalised value to a byte and clamps to {@code [0, 255]}.
+     *
+     * @param v value in {@code [0, 1]}; out-of-range inputs are clamped
+     * @return rounded integer in {@code [0, 255]}
+     */
     public static int clampToByte(double v) {
         long r = Math.round(v * 255);
         if (r < 0) return 0;
@@ -207,6 +292,12 @@ public final class ColorMath {
         return (int) r;
     }
 
+    /**
+     * Clamps an alpha value to {@code [0, 1]}.
+     *
+     * @param a alpha value
+     * @return the value clamped to {@code [0, 1]}
+     */
     public static double clampAlpha(double a) {
         if (a < 0) return 0;
         if (a > 1) return 1;
@@ -218,6 +309,9 @@ public final class ColorMath {
     /**
      * Parses a CSS angle (deg, rad, grad, turn, or bare number) to degrees.
      * The {@code none} keyword is treated as 0.
+     *
+     * @param s CSS angle token
+     * @return angle in degrees
      */
     public static double parseAngle(String s) {
         s = s.trim();
@@ -241,6 +335,10 @@ public final class ColorMath {
      * Parses a CSS number or percentage. For a percentage, returns
      * {@code (pct/100) * percentMax}. For a bare number, returns the number as-is.
      * The {@code none} keyword is treated as 0.
+     *
+     * @param s          CSS token (e.g. {@code "50%"} or {@code "0.5"})
+     * @param percentMax value mapped from 100% — e.g. {@code 1} for normalised, {@code 125} for Lab a/b
+     * @return parsed value in the target unit
      */
     public static double parsePercentOrNumber(String s, double percentMax) {
         s = s.trim();
@@ -253,6 +351,9 @@ public final class ColorMath {
 
     /**
      * Parses an alpha value: percentage (e.g. {@code 50%}) or a number 0..1.
+     *
+     * @param s CSS alpha token
+     * @return alpha value, typically in {@code [0, 1]}
      */
     public static double parseAlpha(String s) {
         s = s.trim();
@@ -267,6 +368,10 @@ public final class ColorMath {
      * Strips a CSS function wrapper {@code "name(...)"} and returns whitespace-separated
      * components. Commas are normalised to spaces (legacy comma form) and the {@code /}
      * alpha separator is converted to whitespace so the alpha appears as a trailing token.
+     *
+     * @param css the full CSS function expression (e.g. {@code "rgb(255, 0, 0)"})
+     * @return component tokens in source order
+     * @throws IllegalArgumentException if no parentheses are found
      */
     public static String[] splitComponents(String css) {
         int open = css.indexOf('(');

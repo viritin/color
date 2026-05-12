@@ -47,6 +47,8 @@ public enum ColorSpace {
     }
 
     /**
+     * Returns this color space's CSS identifier.
+     *
      * @return the lowercase identifier used in CSS, e.g. {@code "display-p3"}.
      */
     public String cssName() {

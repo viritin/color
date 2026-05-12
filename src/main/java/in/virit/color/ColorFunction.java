@@ -89,6 +89,8 @@ public record ColorFunction(ColorSpace space, double c1, double c2, double c3, d
     }
 
     /**
+     * Returns a copy of this color with a different alpha value.
+     *
      * @param newAlpha new alpha (0–1)
      * @return new ColorFunction with the given alpha
      */

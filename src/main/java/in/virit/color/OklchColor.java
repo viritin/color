@@ -66,6 +66,8 @@ public record OklchColor(double l, double c, double h, double alpha) implements 
     }
 
     /**
+     * Returns a copy of this color with a different alpha value.
+     *
      * @param newAlpha new alpha (0–1)
      * @return new OklchColor with the given alpha
      */

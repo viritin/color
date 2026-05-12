@@ -72,6 +72,8 @@ public record LabColor(double l, double a, double b, double alpha) implements Co
     }
 
     /**
+     * Returns a copy of this color with a different alpha value.
+     *
      * @param newAlpha new alpha (0–1)
      * @return new LabColor with the given alpha
      */
