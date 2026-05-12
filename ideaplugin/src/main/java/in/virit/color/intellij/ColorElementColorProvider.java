@@ -11,8 +11,10 @@ import com.intellij.psi.PsiEnumConstant;
 import com.intellij.psi.PsiExpression;
 import com.intellij.psi.PsiExpressionList;
 import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiKeyword;
 import com.intellij.psi.PsiLiteralExpression;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiMethodCallExpression;
@@ -58,15 +60,16 @@ public class ColorElementColorProvider implements ElementColorProvider {
 
     @Override
     public @Nullable Color getColorFrom(@NotNull PsiElement element) {
-        if (element instanceof PsiNewExpression newExpr) {
-            return fromNewExpression(newExpr);
-        }
-        if (element instanceof PsiMethodCallExpression call) {
-            return fromMethodCall(call);
-        }
-        if (element instanceof PsiReferenceExpression ref) {
-            return fromNamedColorReference(ref);
-        }
+        // Per the LineMarkerProvider contract, color providers must anchor on leaf
+        // elements only; returning non-null for composite PSI nodes triggers a
+        // "Performance warning: LineMarker is supposed to be registered for leaf
+        // elements only" from c.i.c.d.LineMarkerInfo.
+        PsiNewExpression newExpr = newExpressionAnchoredAt(element);
+        if (newExpr != null) return fromNewExpression(newExpr);
+        PsiMethodCallExpression call = methodCallAnchoredAt(element);
+        if (call != null) return fromMethodCall(call);
+        PsiReferenceExpression named = namedColorAnchoredAt(element);
+        if (named != null) return fromNamedColorReference(named);
         return null;
     }
 
@@ -78,8 +81,63 @@ public class ColorElementColorProvider implements ElementColorProvider {
         WriteCommandAction.runWriteCommandAction(project, "Change Color", null, () -> {
             PsiElement target = currentElement(element);
             if (target == null) return;
-            applyColor(project, element, target, color);
+            // After a redirect, currentElement returns the replacement expression directly.
+            // On the first call (and post-rename), `target == element` (the leaf), and we
+            // need to walk back up to the recognized expression for applyColor's dispatch.
+            PsiElement expr = target == element ? expressionAnchoredAt(target) : target;
+            if (expr == null) return;
+            applyColor(project, element, expr, color);
         }, live.getContainingFile());
+    }
+
+    private static @Nullable PsiElement expressionAnchoredAt(PsiElement leaf) {
+        PsiNewExpression ne = newExpressionAnchoredAt(leaf);
+        if (ne != null) return ne;
+        PsiMethodCallExpression call = methodCallAnchoredAt(leaf);
+        if (call != null) return call;
+        return namedColorAnchoredAt(leaf);
+    }
+
+    /**
+     * Returns the {@code new XxxColor(...)} expression iff {@code leaf} is the
+     * {@code new} keyword that introduces it. Anchoring on the keyword leaf
+     * is the LineMarkerProvider-correct way to recognise the expression
+     * without registering markers on composite nodes.
+     */
+    private static @Nullable PsiNewExpression newExpressionAnchoredAt(PsiElement leaf) {
+        if (!(leaf instanceof PsiKeyword) || !"new".equals(leaf.getText())) return null;
+        PsiElement parent = leaf.getParent();
+        return parent instanceof PsiNewExpression ne ? ne : null;
+    }
+
+    /**
+     * Returns the {@code XxxColor.of(...)} / {@code Color.parseCssColor(...)} call
+     * iff {@code leaf} is the method-name identifier in its method expression.
+     */
+    private static @Nullable PsiMethodCallExpression methodCallAnchoredAt(PsiElement leaf) {
+        if (!(leaf instanceof PsiIdentifier)) return null;
+        PsiElement parent = leaf.getParent();
+        if (!(parent instanceof PsiReferenceExpression methodExpr)) return null;
+        if (methodExpr.getReferenceNameElement() != leaf) return null;
+        PsiElement grandparent = methodExpr.getParent();
+        if (!(grandparent instanceof PsiMethodCallExpression call)) return null;
+        return call.getMethodExpression() == methodExpr ? call : null;
+    }
+
+    /**
+     * Returns the {@code NamedColor.X} reference iff {@code leaf} is the
+     * constant-name identifier (not the {@code NamedColor} qualifier and not
+     * a method name).
+     */
+    private static @Nullable PsiReferenceExpression namedColorAnchoredAt(PsiElement leaf) {
+        if (!(leaf instanceof PsiIdentifier)) return null;
+        PsiElement parent = leaf.getParent();
+        if (!(parent instanceof PsiReferenceExpression ref)) return null;
+        if (ref.getReferenceNameElement() != leaf) return null;
+        // Exclude method calls — handled by methodCallAnchoredAt.
+        PsiElement gp = ref.getParent();
+        if (gp instanceof PsiMethodCallExpression call && call.getMethodExpression() == ref) return null;
+        return ref;
     }
 
     private @Nullable PsiElement currentElement(PsiElement original) {
