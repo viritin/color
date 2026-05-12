@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-12
+
 ### Added
 
 - Gutter swatches and color picker support for the CSS Color 4 types: `HwbColor`, `LabColor`, `LchColor`, `OklabColor`, `OklchColor` and `ColorFunction` (with `ColorSpace.SRGB` / `DISPLAY_P3` / `REC2020` / `PROPHOTO_RGB` / `A98_RGB` / `XYZ` / `XYZ_D50` / `XYZ_D65`), plus their `.of("...")` factories and matching `Color.parseCssColor("hwb(...)" / "oklch(...)" / "color(display-p3 ...)" / ...)` strings.
@@ -42,6 +44,7 @@ First public release.
 - Click the swatch to open the IDE color picker; the source is rewritten in the original shape.
 - Named-color completion with swatch icons in `Color` contexts.
 
-[Unreleased]: https://github.com/viritin/color/compare/0.2.0...HEAD
+[Unreleased]: https://github.com/viritin/color/compare/0.3.0...HEAD
+[0.3.0]: https://github.com/viritin/color/compare/0.2.0...0.3.0
 [0.2.0]: https://github.com/viritin/color/compare/0.1.2...0.2.0
 [0.1.2]: https://github.com/viritin/color/commits/0.1.2
