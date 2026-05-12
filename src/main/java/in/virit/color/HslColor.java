@@ -260,6 +260,10 @@ public record HslColor(int h, int s, int l, double a) implements Color {
         }
         String[] parts = cssColorString.split(" +");
 
+        if (parts.length < 3 || parts.length > 4) {
+            throw new IllegalArgumentException("hsl() requires 3 or 4 components: " + cssColorString);
+        }
+
         double alpha = 1.0; // default alpha value
         if(parts.length == 4) {
             // If there are 4 parts, the last one is the alpha value

@@ -134,6 +134,10 @@ public record RgbColor(int r, int g, int b, double a) implements Color {
             parts = cssColorString.split(" ");
         }
 
+        if (parts.length < 3 || parts.length > 4) {
+            throw new IllegalArgumentException("rgb() requires 3 or 4 components: " + cssColorString);
+        }
+
         double alpha = 1.0; // default alpha value
         if(parts.length == 4) {
             // If there are 4 parts, the last one is the alpha value
