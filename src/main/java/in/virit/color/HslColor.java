@@ -1,5 +1,7 @@
 package in.virit.color;
 
+import in.virit.color.internal.ColorMath;
+
 import java.util.Locale;
 
 import static in.virit.color.RgbColor.parseAlpha;
@@ -263,29 +265,14 @@ public record HslColor(int h, int s, int l, double a) implements Color {
             // If there are 4 parts, the last one is the alpha value
             alpha = parseAlpha(parts[3].trim());
         }
-        int h = angleToDegrees(parts[0].trim());
+        double rawHue = ColorMath.parseAngle(parts[0].trim());
+        // Normalize hue into [0, 360]; CSS allows any angle including negative
+        // and out-of-range values.
+        int h = (int) Math.round(((rawHue % 360) + 360) % 360);
+        if (h == 360) h = 0;
         int s = parsePercentage(parts[1].trim());
         int l = parsePercentage(parts[2].trim());
         return new HslColor(h, s, l, alpha);
-    }
-
-    private static int angleToDegrees(String cssNumberOrAngle) {
-        // Check if the value is a percentage
-        if (cssNumberOrAngle.endsWith("deg")) {
-            // Remove the degree sign and parse as an integer
-            return Integer.parseInt(cssNumberOrAngle.replace("deg", ""));
-        } else if (cssNumberOrAngle.endsWith("rad")) {
-            // Convert radians to degrees
-            double radians = Double.parseDouble(cssNumberOrAngle.replace("rad", ""));
-            return (int) Math.round(Math.toDegrees(radians));
-        } else if (cssNumberOrAngle.endsWith("grad")) {
-            // Convert gradians to degrees
-            double gradians = Double.parseDouble(cssNumberOrAngle.replace("grad", ""));
-            return (int) Math.round(gradians * 0.9);
-        } else {
-            // Parse as an integer directly
-            return Integer.parseInt(cssNumberOrAngle);
-        }
     }
 
     /**
