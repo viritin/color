@@ -25,7 +25,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.release>11</maven.compiler.release>
+        <!-- Bumped from 11 to 17 because in.virit:color uses Java 17 records. -->
+        <maven.compiler.release>17</maven.compiler.release>
         <netbeans.api.version>RELEASE150</netbeans.api.version>
     </properties>
 
@@ -41,6 +42,14 @@
     </repositories>
 
     <dependencies>
+        <!-- Bundled into the NBM so the plugin can use the library's CSS Color 4 math
+             directly for swatch rendering of HwbColor / LabColor / OklchColor / etc. -->
+        <dependency>
+            <groupId>in.virit</groupId>
+            <artifactId>color</artifactId>
+            <version>0.0.5-SNAPSHOT</version>
+        </dependency>
+
         <dependency>
             <groupId>com.junichi11.netbeans.modules</groupId>
             <artifactId>netbeans-color-codes-preview</artifactId>

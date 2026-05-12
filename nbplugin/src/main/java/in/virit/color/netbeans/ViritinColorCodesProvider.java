@@ -66,6 +66,25 @@ public final class ViritinColorCodesProvider implements ColorCodesProvider {
     private static final Pattern P_NAMED = Pattern.compile(
             "\\bNamedColor\\.([A-Z_]+)\\b");
 
+    // ── CSS Color 4 types ────────────────────────────────────────────────────
+    // All take double args (HwbColor / LabColor / LchColor / OklabColor / OklchColor).
+    private static final String CSS4_TYPES = "(?:Hwb|Lab|Lch|Oklab|Oklch)Color";
+    private static final Pattern P_NEW_CSS4_4 = Pattern.compile(
+            "\\bnew\\s+" + CSS4_TYPES + "\\s*\\(" + DBL + "," + DBL + "," + DBL + "," + DBL + "\\)");
+    private static final Pattern P_NEW_CSS4_3 = Pattern.compile(
+            "\\bnew\\s+" + CSS4_TYPES + "\\s*\\(" + DBL + "," + DBL + "," + DBL + "\\)");
+    private static final Pattern P_CSS4_OF = Pattern.compile(
+            "\\b" + CSS4_TYPES + "\\.of\\s*\\(" + STR + "\\)");
+
+    // ColorFunction(ColorSpace.X, c1, c2, c3[, alpha]) and ColorFunction.of("color(...)")
+    private static final String SPACE = "\\s*ColorSpace\\.([A-Z_0-9]+)\\s*";
+    private static final Pattern P_NEW_COLOR_FN_5 = Pattern.compile(
+            "\\bnew\\s+ColorFunction\\s*\\(" + SPACE + "," + DBL + "," + DBL + "," + DBL + "," + DBL + "\\)");
+    private static final Pattern P_NEW_COLOR_FN_4 = Pattern.compile(
+            "\\bnew\\s+ColorFunction\\s*\\(" + SPACE + "," + DBL + "," + DBL + "," + DBL + "\\)");
+    private static final Pattern P_COLOR_FN_OF = Pattern.compile(
+            "\\bColorFunction\\.of\\s*\\(" + STR + "\\)");
+
     @Override
     public String getId() {
         return "viritin-color";
@@ -109,6 +128,13 @@ public final class ViritinColorCodesProvider implements ColorCodesProvider {
         scanParseCss(line, lineNumber, out);
         scanNamed(line, lineNumber, out);
 
+        scanCss4New4(line, lineNumber, out);
+        scanCss4New3(line, lineNumber, out);
+        scanCss4Of(line, lineNumber, out);
+        scanColorFunction5(line, lineNumber, out);
+        scanColorFunction4(line, lineNumber, out);
+        scanColorFunctionOf(line, lineNumber, out);
+
         return out;
     }
 
@@ -139,7 +165,13 @@ public final class ViritinColorCodesProvider implements ColorCodesProvider {
                 || line.contains("HexColor")
                 || line.contains("HslColor")
                 || line.contains("NamedColor")
-                || line.contains("parseCssColor");
+                || line.contains("parseCssColor")
+                || line.contains("HwbColor")
+                || line.contains("LabColor")
+                || line.contains("LchColor")
+                || line.contains("OklabColor")
+                || line.contains("OklchColor")
+                || line.contains("ColorFunction");
     }
 
     private static void scanRgb4(String line, int ln, List<ColorValue> out) {
@@ -273,5 +305,90 @@ public final class ViritinColorCodesProvider implements ColorCodesProvider {
 
     private static boolean validHsl(int h, int s, int l) {
         return h >= 0 && h <= 360 && s >= 0 && s <= 100 && l >= 0 && l <= 100;
+    }
+
+    // ── CSS Color 4 scanning ─────────────────────────────────────────────────
+
+    private static void scanCss4New4(String line, int ln, List<ColorValue> out) {
+        Matcher m = P_NEW_CSS4_4.matcher(line);
+        while (m.find()) {
+            Color c = css4Constructor(line.substring(m.start(), m.end()),
+                    parseD(m.group(1)), parseD(m.group(2)), parseD(m.group(3)), parseD(m.group(4)));
+            if (c != null) out.add(value(line, m, ln, c, ViritinColorValue.Format.CSS_COLOR_4));
+        }
+    }
+
+    private static void scanCss4New3(String line, int ln, List<ColorValue> out) {
+        Matcher m = P_NEW_CSS4_3.matcher(line);
+        while (m.find()) {
+            if (overlapsExisting(out, m)) continue;
+            Color c = css4Constructor(line.substring(m.start(), m.end()),
+                    parseD(m.group(1)), parseD(m.group(2)), parseD(m.group(3)), 1.0);
+            if (c != null) out.add(value(line, m, ln, c, ViritinColorValue.Format.CSS_COLOR_4));
+        }
+    }
+
+    private static void scanCss4Of(String line, int ln, List<ColorValue> out) {
+        Matcher m = P_CSS4_OF.matcher(line);
+        while (m.find()) {
+            Color c = CssParse.any(m.group(1));
+            if (c != null) out.add(value(line, m, ln, c, ViritinColorValue.Format.CSS_COLOR_4));
+        }
+    }
+
+    private static void scanColorFunction5(String line, int ln, List<ColorValue> out) {
+        Matcher m = P_NEW_COLOR_FN_5.matcher(line);
+        while (m.find()) {
+            Color c = colorFunctionConstructor(m.group(1),
+                    parseD(m.group(2)), parseD(m.group(3)), parseD(m.group(4)), parseD(m.group(5)));
+            if (c != null) out.add(value(line, m, ln, c, ViritinColorValue.Format.CSS_COLOR_4));
+        }
+    }
+
+    private static void scanColorFunction4(String line, int ln, List<ColorValue> out) {
+        Matcher m = P_NEW_COLOR_FN_4.matcher(line);
+        while (m.find()) {
+            if (overlapsExisting(out, m)) continue;
+            Color c = colorFunctionConstructor(m.group(1),
+                    parseD(m.group(2)), parseD(m.group(3)), parseD(m.group(4)), 1.0);
+            if (c != null) out.add(value(line, m, ln, c, ViritinColorValue.Format.CSS_COLOR_4));
+        }
+    }
+
+    private static void scanColorFunctionOf(String line, int ln, List<ColorValue> out) {
+        Matcher m = P_COLOR_FN_OF.matcher(line);
+        while (m.find()) {
+            Color c = CssParse.any(m.group(1));
+            if (c != null) out.add(value(line, m, ln, c, ViritinColorValue.Format.CSS_COLOR_4));
+        }
+    }
+
+    /** Reads the simple type name from a {@code new XxxColor(...)} substring and dispatches. */
+    private static Color css4Constructor(String matched, double c1, double c2, double c3, double alpha) {
+        try {
+            in.virit.color.Color rec;
+            if (matched.contains("HwbColor"))   rec = new in.virit.color.HwbColor(c1, c2, c3, alpha);
+            else if (matched.contains("LabColor"))   rec = new in.virit.color.LabColor(c1, c2, c3, alpha);
+            else if (matched.contains("LchColor"))   rec = new in.virit.color.LchColor(c1, c2, c3, alpha);
+            else if (matched.contains("OklabColor")) rec = new in.virit.color.OklabColor(c1, c2, c3, alpha);
+            else if (matched.contains("OklchColor")) rec = new in.virit.color.OklchColor(c1, c2, c3, alpha);
+            else return null;
+            return CssParse.toAwt(rec.toRgbColor());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private static Color colorFunctionConstructor(String spaceName, double c1, double c2, double c3, double alpha) {
+        try {
+            in.virit.color.ColorSpace space = in.virit.color.ColorSpace.valueOf(spaceName);
+            return CssParse.toAwt(new in.virit.color.ColorFunction(space, c1, c2, c3, alpha).toRgbColor());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private static double parseD(String s) {
+        return Double.parseDouble(s.trim());
     }
 }

@@ -101,7 +101,7 @@ public class ColorElementColorProvider implements ElementColorProvider {
         PsiJavaCodeReferenceElement ref = expr.getClassReference();
         if (ref == null) return null;
         String simple = ref.getReferenceName();
-        if (!"RgbColor".equals(simple) && !"HexColor".equals(simple) && !"HslColor".equals(simple)) {
+        if (simple == null || !KNOWN_RECORD_NAMES.contains(simple)) {
             return null;
         }
         String fqn = qualifiedName(ref);
@@ -112,8 +112,19 @@ public class ColorElementColorProvider implements ElementColorProvider {
         if (ColorLib.RGB.equals(fqn)) return rgbFromIntArgs(a);
         if (ColorLib.HSL.equals(fqn)) return hslFromIntArgs(a);
         if (ColorLib.HEX.equals(fqn)) return a.length == 1 ? HexUtil.parseHex(stringValue(a[0])) : null;
+        if (ColorLib.HWB.equals(fqn)) return hwbFromDoubleArgs(a);
+        if (ColorLib.LAB.equals(fqn)) return labFromDoubleArgs(a);
+        if (ColorLib.LCH.equals(fqn)) return lchFromDoubleArgs(a);
+        if (ColorLib.OKLAB.equals(fqn)) return oklabFromDoubleArgs(a);
+        if (ColorLib.OKLCH.equals(fqn)) return oklchFromDoubleArgs(a);
+        if (ColorLib.COLOR_FUNCTION.equals(fqn)) return colorFunctionFromArgs(a);
         return null;
     }
+
+    private static final java.util.Set<String> KNOWN_RECORD_NAMES = java.util.Set.of(
+            "RgbColor", "HexColor", "HslColor",
+            "HwbColor", "LabColor", "LchColor", "OklabColor", "OklchColor",
+            "ColorFunction");
 
     private @Nullable Color fromMethodCall(PsiMethodCallExpression call) {
         PsiReferenceExpression methodExpr = call.getMethodExpression();
@@ -122,8 +133,7 @@ public class ColorElementColorProvider implements ElementColorProvider {
         PsiExpression qualifier = methodExpr.getQualifierExpression();
         if (!(qualifier instanceof PsiReferenceExpression qref)) return null;
         String qName = qref.getReferenceName();
-        if (!"RgbColor".equals(qName) && !"HexColor".equals(qName)
-                && !"HslColor".equals(qName) && !"Color".equals(qName)) return null;
+        if (qName == null || (!"Color".equals(qName) && !KNOWN_RECORD_NAMES.contains(qName))) return null;
 
         PsiMethod method = call.resolveMethod();
         if (method == null) return null;
@@ -139,6 +149,13 @@ public class ColorElementColorProvider implements ElementColorProvider {
         if (ColorLib.RGB.equals(fqn)) return CssParse.rgb(s);
         if (ColorLib.HSL.equals(fqn)) return CssParse.hsl(s);
         if (ColorLib.COLOR.equals(fqn)) return CssParse.any(s);
+        if (ColorLib.HWB.equals(fqn)
+                || ColorLib.LAB.equals(fqn) || ColorLib.LCH.equals(fqn)
+                || ColorLib.OKLAB.equals(fqn) || ColorLib.OKLCH.equals(fqn)
+                || ColorLib.COLOR_FUNCTION.equals(fqn)) {
+            // All CSS Color 4 types delegate to the same library entry point.
+            return CssParse.any(s);
+        }
         return null;
     }
 
@@ -209,6 +226,15 @@ public class ColorElementColorProvider implements ElementColorProvider {
                 }
                 return;
             }
+            // CSS Color 4 record types: picker yields an sRGB value, so collapse the
+            // expression to new RgbColor(...). Round-tripping to OkLCh/Lab/HWB would
+            // require gamut-mapping math the user rarely wants in this flow.
+            if (ColorLib.HWB.equals(fqn) || ColorLib.LAB.equals(fqn) || ColorLib.LCH.equals(fqn)
+                    || ColorLib.OKLAB.equals(fqn) || ColorLib.OKLCH.equals(fqn)
+                    || ColorLib.COLOR_FUNCTION.equals(fqn)) {
+                replaceWithNewRgb(project, original, newExpr, color);
+                return;
+            }
         }
 
         if (element instanceof PsiMethodCallExpression call) {
@@ -227,6 +253,13 @@ public class ColorElementColorProvider implements ElementColorProvider {
                 newLiteral = formatRgb(color);
             } else if (ColorLib.HSL.equals(fqn)) {
                 newLiteral = formatHsl(color);
+            } else if (ColorLib.HWB.equals(fqn) || ColorLib.LAB.equals(fqn) || ColorLib.LCH.equals(fqn)
+                    || ColorLib.OKLAB.equals(fqn) || ColorLib.OKLCH.equals(fqn)
+                    || ColorLib.COLOR_FUNCTION.equals(fqn)) {
+                // The picker yields an sRGB value. HwbColor.of("#ff0000") is invalid since
+                // .of() expects its own format, so replace the whole call with new RgbColor(...).
+                replaceWithNewRgb(project, original, call, color);
+                return;
             } else {
                 return;
             }
@@ -253,6 +286,22 @@ public class ColorElementColorProvider implements ElementColorProvider {
             PsiElement inserted = ref.replace(replacement);
             recordRedirect(project, original, inserted);
         }
+    }
+
+    /**
+     * Replaces an arbitrary expression with {@code new RgbColor(r, g, b[, a])} for the
+     * picked color. Used as a fallback when the original expression's color space cannot
+     * be re-encoded losslessly (CSS Color 4 types — picker yields sRGB).
+     */
+    private void replaceWithNewRgb(Project project, PsiElement original, PsiElement element, Color color) {
+        PsiElementFactory f = JavaPsiFacade.getElementFactory(project);
+        ensureImported(project, element, ColorLib.RGB);
+        String args = color.getAlpha() == 255
+                ? color.getRed() + ", " + color.getGreen() + ", " + color.getBlue()
+                : color.getRed() + ", " + color.getGreen() + ", " + color.getBlue() + ", " + alphaStr(color);
+        PsiExpression replacement = f.createExpressionFromText("new RgbColor(" + args + ")", element);
+        PsiElement inserted = element.replace(replacement);
+        recordRedirect(project, original, inserted);
     }
 
     private static void ensureImported(Project project, PsiElement context, String classFqn) {
@@ -293,6 +342,79 @@ public class ColorElementColorProvider implements ElementColorProvider {
             if (da != null) alpha = da;
         }
         return CssParse.hslToColor(h, s, l, alpha);
+    }
+
+    private static @Nullable Color hwbFromDoubleArgs(PsiExpression[] a) {
+        if (a.length < 3 || a.length > 4) return null;
+        Double h = doubleValue(a[0]), w = doubleValue(a[1]), b = doubleValue(a[2]);
+        Double alpha = a.length == 4 ? doubleValue(a[3]) : 1.0;
+        if (h == null || w == null || b == null || alpha == null) return null;
+        try {
+            return CssParse.toAwt(new in.virit.color.HwbColor(h, w, b, alpha).toRgbColor());
+        } catch (IllegalArgumentException e) { return null; }
+    }
+
+    private static @Nullable Color labFromDoubleArgs(PsiExpression[] a) {
+        if (a.length < 3 || a.length > 4) return null;
+        Double l = doubleValue(a[0]), aAxis = doubleValue(a[1]), bAxis = doubleValue(a[2]);
+        Double alpha = a.length == 4 ? doubleValue(a[3]) : 1.0;
+        if (l == null || aAxis == null || bAxis == null || alpha == null) return null;
+        try {
+            return CssParse.toAwt(new in.virit.color.LabColor(l, aAxis, bAxis, alpha).toRgbColor());
+        } catch (IllegalArgumentException e) { return null; }
+    }
+
+    private static @Nullable Color lchFromDoubleArgs(PsiExpression[] a) {
+        if (a.length < 3 || a.length > 4) return null;
+        Double l = doubleValue(a[0]), c = doubleValue(a[1]), h = doubleValue(a[2]);
+        Double alpha = a.length == 4 ? doubleValue(a[3]) : 1.0;
+        if (l == null || c == null || h == null || alpha == null) return null;
+        try {
+            return CssParse.toAwt(new in.virit.color.LchColor(l, c, h, alpha).toRgbColor());
+        } catch (IllegalArgumentException e) { return null; }
+    }
+
+    private static @Nullable Color oklabFromDoubleArgs(PsiExpression[] a) {
+        if (a.length < 3 || a.length > 4) return null;
+        Double l = doubleValue(a[0]), aAxis = doubleValue(a[1]), bAxis = doubleValue(a[2]);
+        Double alpha = a.length == 4 ? doubleValue(a[3]) : 1.0;
+        if (l == null || aAxis == null || bAxis == null || alpha == null) return null;
+        try {
+            return CssParse.toAwt(new in.virit.color.OklabColor(l, aAxis, bAxis, alpha).toRgbColor());
+        } catch (IllegalArgumentException e) { return null; }
+    }
+
+    private static @Nullable Color oklchFromDoubleArgs(PsiExpression[] a) {
+        if (a.length < 3 || a.length > 4) return null;
+        Double l = doubleValue(a[0]), c = doubleValue(a[1]), h = doubleValue(a[2]);
+        Double alpha = a.length == 4 ? doubleValue(a[3]) : 1.0;
+        if (l == null || c == null || h == null || alpha == null) return null;
+        try {
+            return CssParse.toAwt(new in.virit.color.OklchColor(l, c, h, alpha).toRgbColor());
+        } catch (IllegalArgumentException e) { return null; }
+    }
+
+    private static @Nullable Color colorFunctionFromArgs(PsiExpression[] a) {
+        // ColorFunction(ColorSpace space, double c1, double c2, double c3[, double alpha])
+        if (a.length < 4 || a.length > 5) return null;
+        String spaceName = enumConstantName(a[0]);
+        if (spaceName == null) return null;
+        in.virit.color.ColorSpace space;
+        try {
+            space = in.virit.color.ColorSpace.valueOf(spaceName);
+        } catch (IllegalArgumentException e) { return null; }
+        Double c1 = doubleValue(a[1]), c2 = doubleValue(a[2]), c3 = doubleValue(a[3]);
+        Double alpha = a.length == 5 ? doubleValue(a[4]) : 1.0;
+        if (c1 == null || c2 == null || c3 == null || alpha == null) return null;
+        try {
+            return CssParse.toAwt(new in.virit.color.ColorFunction(space, c1, c2, c3, alpha).toRgbColor());
+        } catch (IllegalArgumentException e) { return null; }
+    }
+
+    private static @Nullable String enumConstantName(PsiExpression e) {
+        if (!(e instanceof PsiReferenceExpression ref)) return null;
+        PsiElement target = ref.resolve();
+        return target instanceof PsiEnumConstant ec ? ec.getName() : null;
     }
 
     private static Color safeRgb(int r, int g, int b, int a) {

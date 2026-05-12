@@ -23,7 +23,15 @@ final class ViritinColorValue extends AbstractColorValue {
         NEW_HSL_4,
         HSL_OF,
         PARSE_CSS,
-        NAMED_COLOR
+        NAMED_COLOR,
+        /**
+         * Any CSS Color 4 expression (new HwbColor(...), HwbColor.of("hwb(...)"),
+         * new OklchColor(...), ColorFunction.of("color(display-p3 ...)"), …).
+         * Picker rewrites collapse these to {@code new RgbColor(r, g, b[, a])}
+         * since round-tripping arbitrary picker output into Lab/OkLCh/HWB is not
+         * lossless without gamut mapping the user rarely expects in this flow.
+         */
+        CSS_COLOR_4
     }
 
     private final Color color;

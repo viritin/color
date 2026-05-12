@@ -47,6 +47,11 @@ final class ViritinColorFormatter implements ColorCodeFormatter {
                 return "Color.parseCssColor(\"" + HexUtil.toHex(c) + "\")";
             case NAMED_COLOR:
                 return "HexColor.of(\"" + HexUtil.toHex(c) + "\")";
+            case CSS_COLOR_4:
+                return c.getAlpha() == 255
+                        ? "new RgbColor(" + c.getRed() + ", " + c.getGreen() + ", " + c.getBlue() + ")"
+                        : "new RgbColor(" + c.getRed() + ", " + c.getGreen() + ", " + c.getBlue()
+                                + ", " + alpha(c) + ")";
             default:
                 return HexUtil.toHex(c);
         }
