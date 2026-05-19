@@ -2,15 +2,15 @@ package in.virit.color;
 
 import java.util.Optional;
 
-///
-/// Represents a CSS color.
-///
-///  To create an instance from a CSS string, use the
-///  static {@link #parseCssColor(String)} method or directly one of the "of" methods
-///  of the implementing classes {@link RgbColor}, {@link HexColor}, {@link HslColor},
-///  {@link NamedColor}, {@link HwbColor}, {@link LabColor}, {@link LchColor},
-///  {@link OklabColor}, {@link OklchColor} or {@link ColorFunction}.
-///
+/**
+ * Represents a CSS color.
+ * <p>
+ * To create an instance from a CSS string, use the
+ * static {@link #parseCssColor(String)} method or directly one of the "of" methods
+ * of the implementing classes {@link RgbColor}, {@link HexColor}, {@link HslColor},
+ * {@link NamedColor}, {@link HwbColor}, {@link LabColor}, {@link LchColor},
+ * {@link OklabColor}, {@link OklchColor} or {@link ColorFunction}.
+ */
 public interface Color {
 
     /**

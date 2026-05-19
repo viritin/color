@@ -104,20 +104,21 @@ public record RgbColor(int r, int g, int b, double a) implements Color {
     }
 
 
-    ///
-    /// Parses a CSS color string and returns a RgbColor object. Format can be either the new standard
-    /// or one of the legacy formats. Some examples of valid formats:
-    ///
-    ///  * *rgb(255 255 255 / 0.5)*
-    ///  * *rgb(255 0 0)*
-    ///  * *rgb(255, 0, 0)* (the old style)
-    ///  * *rgba(255, 0, 0, 0.5)* (the old style with alpha channel)
-    ///
-    ///  Css variables and calculations are not currently supported.
-    ///
-    /// @param cssColorString the CSS color string of rgb value to parse
-    /// @return a RgbColor object representing the parsed color
-    ///
+    /**
+     * Parses a CSS color string and returns a RgbColor object. Format can be either the new standard
+     * or one of the legacy formats. Some examples of valid formats:
+     * <ul>
+     *   <li>{@code rgb(255 255 255 / 0.5)}</li>
+     *   <li>{@code rgb(255 0 0)}</li>
+     *   <li>{@code rgb(255, 0, 0)} (the old style)</li>
+     *   <li>{@code rgba(255, 0, 0, 0.5)} (the old style with alpha channel)</li>
+     * </ul>
+     * <p>
+     * CSS variables and calculations are not currently supported.
+     *
+     * @param cssColorString the CSS color string of rgb value to parse
+     * @return a RgbColor object representing the parsed color
+     */
     public static RgbColor of(String cssColorString) {
         String[] parts = ColorMath.splitComponents(cssColorString);
         if (parts.length < 3 || parts.length > 4) {

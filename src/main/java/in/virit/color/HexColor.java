@@ -1,11 +1,11 @@
 package in.virit.color;
 
-///
-/// Hex color representation. Technically this is RGB(A) color, but prints
-/// as hex string.
-///
-/// @param hex Hex color string, e.g. #FF5733 or #FF5733FF
-///
+/**
+ * Hex color representation. Technically this is RGB(A) color, but prints
+ * as hex string.
+ *
+ * @param hex Hex color string, e.g. #FF5733 or #FF5733FF
+ */
 public record HexColor(String hex) implements Color {
 
     /**
