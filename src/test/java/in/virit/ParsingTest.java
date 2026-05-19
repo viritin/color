@@ -2,14 +2,20 @@ package in.virit;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import in.virit.color.Color;
 import in.virit.color.ColorFunction;
+import in.virit.color.HexColor;
 import in.virit.color.HwbColor;
 import in.virit.color.LabColor;
 import in.virit.color.LchColor;
+import in.virit.color.NamedColor;
 import in.virit.color.OklabColor;
 import in.virit.color.OklchColor;
 
@@ -67,6 +73,41 @@ public class ParsingTest {
             Color.parseCssColor("hsl(0 99% 1 / -0.5)"); // alpha out of range
         });
 
+    }
+
+    @Test
+    void tryParseCssColorRecoversFromMalformedInput() {
+        // Malformed hex — Bruno's #ggg case.
+        assertFalse(Color.tryParseCssColor("#ggg").isPresent());
+        // Hex of an invalid length.
+        assertFalse(Color.tryParseCssColor("#1234567").isPresent());
+        // Range violations.
+        assertFalse(Color.tryParseCssColor("rgb(300, 0, 0)").isPresent());
+        assertFalse(Color.tryParseCssColor("hsl(0, 101%, 50%)").isPresent());
+        // Wrong arity / unparseable numbers.
+        assertFalse(Color.tryParseCssColor("rgb(only one)").isPresent());
+        assertFalse(Color.tryParseCssColor("rgb(a b c)").isPresent());
+        // Unknown named color.
+        assertFalse(Color.tryParseCssColor("notacolor").isPresent());
+        // Null and empty.
+        assertFalse(Color.tryParseCssColor(null).isPresent());
+        assertFalse(Color.tryParseCssColor("").isPresent());
+    }
+
+    @Test
+    void tryParseCssColorReturnsValidColors() {
+        Optional<Color> hex = Color.tryParseCssColor("#ff0000");
+        assertTrue(hex.isPresent());
+        assertInstanceOf(HexColor.class, hex.get());
+        assertEquals(255, hex.get().toRgbColor().r());
+
+        Optional<Color> named = Color.tryParseCssColor("red");
+        assertTrue(named.isPresent());
+        assertInstanceOf(NamedColor.class, named.get());
+
+        // Sanity: lenient path produces the same value as strict for valid input.
+        assertEquals(Color.parseCssColor("rgb(255 0 0/50%)"),
+                Color.tryParseCssColor("rgb(255 0 0/50%)").orElseThrow());
     }
 
     @Test
