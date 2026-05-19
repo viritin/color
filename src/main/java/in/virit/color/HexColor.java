@@ -35,22 +35,24 @@ public record HexColor(String hex) implements Color {
     }
 
     private static RgbColor toRgbColor(String hex) {
-        if (hex.length() == 4) {
-            String r = hex.substring(1, 2);
-            String g = hex.substring(2, 3);
-            String b = hex.substring(3, 4);
-            // normalize short form
-            hex = "#" + r + r + g + g + b + b;
+        int len = hex.length();
+        if (len == 4) {
+            // Short form #RGB: duplicate each digit (0xF -> 0xFF).
+            int r = Character.digit(hex.charAt(1), 16) * 17;
+            int g = Character.digit(hex.charAt(2), 16) * 17;
+            int b = Character.digit(hex.charAt(3), 16) * 17;
+            return new RgbColor(r, g, b);
         }
-        RgbColor rgbColor = new RgbColor(
-                Integer.parseInt(hex.substring(1, 3), 16),
-                Integer.parseInt(hex.substring(3, 5), 16),
-                Integer.parseInt(hex.substring(5, 7), 16)
-        );
-        if (hex.length() == 9) {
-            rgbColor = rgbColor.withAlpha(Integer.parseInt(hex.substring(7, 9), 16) / 255.0);
+        // 7 or 9: #RRGGBB[AA]. Use the index-based parseInt overload so we
+        // don't allocate a substring per channel.
+        int r = Integer.parseInt(hex, 1, 3, 16);
+        int g = Integer.parseInt(hex, 3, 5, 16);
+        int b = Integer.parseInt(hex, 5, 7, 16);
+        if (len == 9) {
+            double a = Integer.parseInt(hex, 7, 9, 16) / 255.0;
+            return new RgbColor(r, g, b, a);
         }
-        return rgbColor;
+        return new RgbColor(r, g, b);
     }
 
     /**

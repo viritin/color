@@ -59,6 +59,20 @@ public final class ParsePerformanceBenchmark {
                 functional.length);
         run("strict parseCssColor       (functional only)",
                 () -> driveStrict(functional, MEASURE_ITERATIONS));
+
+        // Hex head-to-head: jairosvg has a hand-rolled fast path for #-strings;
+        // measure how far behind the library path is — both as a sanity check
+        // for keeping that fast path, and to see if HexColor has obvious slack.
+        String[] hexOnly = buildHexOnly();
+        System.out.printf(Locale.US, "%nhex-only corpus: %d strings%n", hexOnly.length);
+        // Both library paths run all the way to RgbColor — jairosvg's actual
+        // usage is parse + toRgbColor (it consumes RGB ints to build AWT colors).
+        run("strict parseCssColor.toRgbColor   (hex only — library)",
+                () -> driveStrictToRgb(hexOnly, MEASURE_ITERATIONS));
+        run("lenient tryParseCssColor.toRgbColor (hex only — library)",
+                () -> driveLenientToRgb(hexOnly, MEASURE_ITERATIONS));
+        run("hand-rolled fast path           (hex only — jairosvg-shaped)",
+                () -> driveHandRolledHex(hexOnly, MEASURE_ITERATIONS));
     }
 
     private static void warmup() {
@@ -112,6 +126,60 @@ public final class ParsePerformanceBenchmark {
         return sink;
     }
 
+    private static long driveStrictToRgb(String[] corpus, int iterations) {
+        long sink = 0;
+        int n = corpus.length;
+        for (int i = 0; i < iterations; i++) {
+            sink += Color.parseCssColor(corpus[i % n]).toRgbColor().hashCode();
+        }
+        return sink;
+    }
+
+    private static long driveLenientToRgb(String[] corpus, int iterations) {
+        long sink = 0;
+        int n = corpus.length;
+        for (int i = 0; i < iterations; i++) {
+            sink += Color.tryParseCssColor(corpus[i % n])
+                    .map(Color::toRgbColor)
+                    .map(Object::hashCode).orElse(0);
+        }
+        return sink;
+    }
+
+    /**
+     * Mirrors jairosvg's hex fast path in {@code Colors.color()} — direct
+     * Integer.parseInt with index ranges, no String allocations beyond the
+     * final RgbColor. Used to measure the cost gap vs the library path.
+     */
+    private static long driveHandRolledHex(String[] corpus, int iterations) {
+        long sink = 0;
+        int n = corpus.length;
+        for (int i = 0; i < iterations; i++) {
+            String s = corpus[i % n];
+            int len = s.length();
+            int r, g, b;
+            double a = 1.0;
+            if (len == 7) {
+                r = Integer.parseInt(s, 1, 3, 16);
+                g = Integer.parseInt(s, 3, 5, 16);
+                b = Integer.parseInt(s, 5, 7, 16);
+            } else if (len == 4) {
+                r = Character.digit(s.charAt(1), 16) * 17;
+                g = Character.digit(s.charAt(2), 16) * 17;
+                b = Character.digit(s.charAt(3), 16) * 17;
+            } else if (len == 9) {
+                r = Integer.parseInt(s, 1, 3, 16);
+                g = Integer.parseInt(s, 3, 5, 16);
+                b = Integer.parseInt(s, 5, 7, 16);
+                a = Integer.parseInt(s, 7, 9, 16) / 255.0;
+            } else {
+                continue;
+            }
+            sink += new in.virit.color.RgbColor(r, g, b, a).hashCode();
+        }
+        return sink;
+    }
+
     private static String[] buildCorpus() {
         List<String> list = new ArrayList<>();
         // Named colors are common in SVG.
@@ -151,6 +219,15 @@ public final class ParsePerformanceBenchmark {
                 "lab(50 20 -30)",
                 "oklch(0.7 0.15 200)");
         return list.toArray(new String[0]);
+    }
+
+    private static String[] buildHexOnly() {
+        return new String[] {
+                "#ff0000", "#00ff00", "#0000ff", "#FF5733", "#1a2b3c",
+                "#abcdef", "#123456", "#deadbe", "#000000", "#ffffff",
+                "#f00", "#0f0", "#00f", "#abc", "#fff", "#000",
+                "#ff000080", "#1a2b3c4d"
+        };
     }
 
     /** Only functional notation — what jairosvg actually routes through the library. */
