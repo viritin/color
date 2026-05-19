@@ -6,20 +6,22 @@ Inspiration for the project came from a number of [Vaadin Flow](https://vaadin.c
 
 ## Install
 
+Requires Java 17 or later.
+
 Maven:
 
 ```xml
 <dependency>
     <groupId>in.virit</groupId>
     <artifactId>color</artifactId>
-    <version>0.0.4</version>
+    <version>1.1.0</version>
 </dependency>
 ```
 
 Gradle:
 
 ```kotlin
-implementation("in.virit:color:0.0.4")
+implementation("in.virit:color:1.1.0")
 ```
 
 ## Quick examples
@@ -28,19 +30,33 @@ implementation("in.virit:color:0.0.4")
 import in.virit.color.Color;
 import in.virit.color.HexColor;
 import in.virit.color.HslColor;
+import in.virit.color.LabColor;
 import in.virit.color.NamedColor;
+import in.virit.color.OklchColor;
 import in.virit.color.RgbColor;
 
 // The base type is Color; concrete records implement it.
 Color red       = new RgbColor(255, 0, 0);
 Color halfRed   = new RgbColor(255, 0, 0, 0.5);
 Color tomato    = NamedColor.TOMATO;
+Color clear     = NamedColor.TRANSPARENT;        // rgba(0, 0, 0, 0)
 Color brand     = HexColor.of("#82CB32");
 Color shortHex  = HexColor.of("#F0A");           // #FF00AA
 Color hsl       = new HslColor(120, 100, 50);
 
-// Parse anything CSS-shaped (named, hex, rgb(...), hsl(...)).
+// CSS Color 4 spaces are first-class too.
+Color lab    = LabColor.of("lab(50 20 -30)");
+Color oklch  = OklchColor.of("oklch(0.7 0.15 200)");
+
+// Parse anything CSS-shaped (named, hex, rgb/rgba, hsl/hsla, hwb,
+// lab, lch, oklab, oklch, color(<space> ...)).
 Color parsed = Color.parseCssColor("rgb(0 200 80 / 0.5)");
+
+// Lenient counterpart for untrusted input (e.g. SVG attribute values):
+// returns Optional.empty() on null or any malformed string instead of
+// throwing — caller picks the fallback.
+Color fallback = Color.tryParseCssColor("#ggg")
+        .orElse(NamedColor.BLACK);
 
 // toString() always returns a CSS-compatible string.
 String css    = brand.toString();                // "#82CB32"
@@ -58,6 +74,28 @@ HslColor sat     = asHsl.saturate(10);
 HslColor opp     = asHsl.complement();           // hue + 180°
 ```
 
+## CSS coverage
+
+`Color.parseCssColor` (and the per-type `of(...)` methods) handle the
+shapes the CSS Color Module Level 4 spec actually puts into stylesheets:
+
+- `#hex` — 3, 6 and 8 digit forms
+- CSS named colors (147 of them, plus `transparent`)
+- `rgb()` / `rgba()` — legacy comma and modern space/slash forms
+- `hsl()` / `hsla()` — legacy comma and modern space/slash forms
+- `hwb()`
+- `lab()` and `lch()`
+- `oklab()` and `oklch()`
+- `color(<space> r g b [/ a])` — predefined spaces (`srgb`,
+  `display-p3`, `a98-rgb`, `rec2020`, `prophoto-rgb`, etc.)
+
+Not yet supported, by design or by deferral:
+
+- CSS variables (`var(--name)`) — would require a resolution context.
+- `none` keyword for missing components.
+- `color-mix()` and relative color syntax.
+- `calc(...)` inside component values.
+
 ## IDE support
 
 The plugins are optional but shorten the feedback loop when working with colors.
@@ -71,10 +109,12 @@ The plugins are optional but shorten the feedback loop when working with colors.
 - Minimal dependencies and module usage (e.g. no `java.desktop` should be needed).
 - Reasonable validations for the input values.
 - `toString()` returns a CSS-compatible string.
-- CSS variables are out of scope (would require some sort of context and complicate the design).
-- TODO: `calc(...)` parsing.
+- API ergonomics first; performance is shaped around that rather than the other way around.
 
-At least for the initial implementation I didn't pay any attention to performance. Things can probably be done in a much more performant manner. I'm of course open for PRs and suggestions, but "API ergonomics" must not be sacrificed for performance!
+`parseCssColor` is now fast enough to be used freely in hot paths (~25
+ns/op average across a mixed corpus on a modern desktop), with the
+functional-notation case at ~60 ns/op. PRs that improve this further
+without compromising the public API are welcome.
 
 ## Impl. notes
 
