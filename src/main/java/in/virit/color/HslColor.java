@@ -246,34 +246,18 @@ public record HslColor(int h, int s, int l, double a) implements Color {
      * @return a new HslColor object
      */
     public static HslColor of(String cssColorString) {
-        int open = cssColorString.indexOf('(');
-        int close = cssColorString.lastIndexOf(')');
-        if (open < 0 || close <= open) {
-            throw new IllegalArgumentException("Invalid hsl() syntax: " + cssColorString);
-        }
-        // Normalise both legacy (comma) and modern (slash-alpha) separators
-        // to whitespace. The slash separator may have optional whitespace on
-        // either side per CSS Color 4, e.g. hsl(0 100% 50%/50%).
-        String inner = cssColorString.substring(open + 1, close)
-                .replace(',', ' ').replace('/', ' ');
-        String[] parts = inner.trim().split("\\s+");
-
+        String[] parts = ColorMath.splitComponents(cssColorString);
         if (parts.length < 3 || parts.length > 4) {
             throw new IllegalArgumentException("hsl() requires 3 or 4 components: " + cssColorString);
         }
-
-        double alpha = 1.0; // default alpha value
-        if(parts.length == 4) {
-            // If there are 4 parts, the last one is the alpha value
-            alpha = parseAlpha(parts[3].trim());
-        }
-        double rawHue = ColorMath.parseAngle(parts[0].trim());
+        double rawHue = ColorMath.parseAngle(parts[0]);
         // Normalize hue into [0, 360]; CSS allows any angle including negative
         // and out-of-range values.
         int h = (int) Math.round(((rawHue % 360) + 360) % 360);
         if (h == 360) h = 0;
-        int s = parsePercentage(parts[1].trim());
-        int l = parsePercentage(parts[2].trim());
+        int s = parsePercentage(parts[1]);
+        int l = parsePercentage(parts[2]);
+        double alpha = parts.length == 4 ? parseAlpha(parts[3]) : 1.0;
         return new HslColor(h, s, l, alpha);
     }
 

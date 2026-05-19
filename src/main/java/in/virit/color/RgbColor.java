@@ -1,5 +1,7 @@
 package in.virit.color;
 
+import in.virit.color.internal.ColorMath;
+
 import java.util.Locale;
 
 /**
@@ -117,35 +119,14 @@ public record RgbColor(int r, int g, int b, double a) implements Color {
     /// @return a RgbColor object representing the parsed color
     ///
     public static RgbColor of(String cssColorString) {
-        int open = cssColorString.indexOf('(');
-        int close = cssColorString.lastIndexOf(')');
-        if (open < 0 || close <= open) {
-            throw new IllegalArgumentException("Invalid rgb() syntax: " + cssColorString);
-        }
-        String inner = cssColorString.substring(open + 1, close);
-        String[] parts;
-        if (inner.indexOf(',') >= 0) {
-            // Legacy comma-separated form: rgb(r, g, b) or rgba(r, g, b, a)
-            parts = inner.split(",");
-        } else {
-            // Modern whitespace-separated form (CSS Color 4): rgb(r g b) or
-            // rgb(r g b / a). The slash separator may have optional whitespace
-            // on either side, so normalise it to whitespace before splitting.
-            parts = inner.replace('/', ' ').trim().split("\\s+");
-        }
-
+        String[] parts = ColorMath.splitComponents(cssColorString);
         if (parts.length < 3 || parts.length > 4) {
             throw new IllegalArgumentException("rgb() requires 3 or 4 components: " + cssColorString);
         }
-
-        double alpha = 1.0;
-        if (parts.length == 4) {
-            alpha = parseAlpha(parts[3].trim());
-        }
-
-        int r = parseInteger(parts[0].trim());
-        int g = parseInteger(parts[1].trim());
-        int b = parseInteger(parts[2].trim());
+        int r = parseInteger(parts[0]);
+        int g = parseInteger(parts[1]);
+        int b = parseInteger(parts[2]);
+        double alpha = parts.length == 4 ? parseAlpha(parts[3]) : 1.0;
         return new RgbColor(r, g, b, alpha);
     }
 

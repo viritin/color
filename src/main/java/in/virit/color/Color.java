@@ -39,27 +39,31 @@ public interface Color {
      */
     static Color parseCssColor(String cssColorString) {
         String s = cssColorString.trim();
-        if (s.startsWith("#")) {
-            return HexColor.of(s);
-        } else if (s.startsWith("rgb")) {
-            return RgbColor.of(s);
-        } else if (s.startsWith("hsl")) {
-            return HslColor.of(s);
-        } else if (s.startsWith("hwb")) {
-            return HwbColor.of(s);
-        } else if (s.startsWith("oklab")) {
-            return OklabColor.of(s);
-        } else if (s.startsWith("oklch")) {
-            return OklchColor.of(s);
-        } else if (s.startsWith("lab")) {
-            return LabColor.of(s);
-        } else if (s.startsWith("lch")) {
-            return LchColor.of(s);
-        } else if (s.startsWith("color(")) {
-            return ColorFunction.of(s);
-        } else {
+        if (s.isEmpty()) {
             return NamedColor.of(s);
         }
+        char c0 = s.charAt(0);
+        if (c0 == '#') {
+            return HexColor.of(s);
+        }
+        // Functional notation always contains '('; named colors never do.
+        // Splitting on this lets the switch below skip prefix matching when
+        // the input is plain — e.g. "lime", "honeydew", "orange" no longer
+        // get mis-routed to the lab/hwb/oklch parsers based on first letter.
+        if (s.indexOf('(') < 0) {
+            return NamedColor.of(s);
+        }
+        // Functional notation: each name has a unique first letter, with at
+        // most one second-letter disambiguation. O(1) compared to chained
+        // startsWith().
+        return switch (c0) {
+            case 'r' -> RgbColor.of(s);
+            case 'h' -> s.charAt(1) == 's' ? HslColor.of(s) : HwbColor.of(s);
+            case 'l' -> s.charAt(1) == 'a' ? LabColor.of(s) : LchColor.of(s);
+            case 'o' -> s.charAt(3) == 'a' ? OklabColor.of(s) : OklchColor.of(s);
+            case 'c' -> ColorFunction.of(s);
+            default -> NamedColor.of(s);
+        };
     }
 
     /**

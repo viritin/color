@@ -365,9 +365,10 @@ public final class ColorMath {
     }
 
     /**
-     * Strips a CSS function wrapper {@code "name(...)"} and returns whitespace-separated
-     * components. Commas are normalised to spaces (legacy comma form) and the {@code /}
-     * alpha separator is converted to whitespace so the alpha appears as a trailing token.
+     * Strips a CSS function wrapper {@code "name(...)"} and returns the component
+     * tokens in source order. Commas, slashes and whitespace are treated uniformly
+     * as separators — both legacy comma form and modern space/slash form parse the
+     * same way, and the alpha (after {@code /}) appears as the trailing token.
      *
      * @param css the full CSS function expression (e.g. {@code "rgb(255, 0, 0)"})
      * @return component tokens in source order
@@ -379,9 +380,31 @@ public final class ColorMath {
         if (open < 0 || close < 0 || close < open) {
             throw new IllegalArgumentException("Invalid CSS color function: " + css);
         }
-        String inner = css.substring(open + 1, close).trim();
-        inner = inner.replace(",", " ");
-        inner = inner.replace("/", " ");
-        return inner.trim().split("\\s+");
+        // Single pass over the inner range. CSS color functions have 3 or 4
+        // components; size for that and grow if needed.
+        String[] tokens = new String[4];
+        int n = 0;
+        int tokenStart = -1;
+        for (int i = open + 1; i < close; i++) {
+            char c = css.charAt(i);
+            if (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == ',' || c == '/') {
+                if (tokenStart >= 0) {
+                    if (n == tokens.length) {
+                        tokens = java.util.Arrays.copyOf(tokens, n * 2);
+                    }
+                    tokens[n++] = css.substring(tokenStart, i);
+                    tokenStart = -1;
+                }
+            } else if (tokenStart < 0) {
+                tokenStart = i;
+            }
+        }
+        if (tokenStart >= 0) {
+            if (n == tokens.length) {
+                tokens = java.util.Arrays.copyOf(tokens, n + 1);
+            }
+            tokens[n++] = css.substring(tokenStart, close);
+        }
+        return n == tokens.length ? tokens : java.util.Arrays.copyOf(tokens, n);
     }
 }

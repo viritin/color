@@ -50,6 +50,15 @@ public final class ParsePerformanceBenchmark {
                 () -> driveLenient(CORPUS, MEASURE_ITERATIONS));
         run("lenient tryParseCssColor   (with ~10% malformed)",
                 () -> driveLenient(CORPUS_WITH_MALFORMED, MEASURE_ITERATIONS));
+
+        // jairosvg-shaped: it only goes through the library for functional
+        // notation (rgb/hsl/hwb/lab/...). Named colors and hex have their own
+        // fast paths in Colors.color, so the library never sees them.
+        String[] functional = buildFunctionalOnly();
+        System.out.printf(Locale.US, "%njairosvg-shaped corpus: %d strings (functional notation only)%n",
+                functional.length);
+        run("strict parseCssColor       (functional only)",
+                () -> driveStrict(functional, MEASURE_ITERATIONS));
     }
 
     private static void warmup() {
@@ -142,6 +151,29 @@ public final class ParsePerformanceBenchmark {
                 "lab(50 20 -30)",
                 "oklch(0.7 0.15 200)");
         return list.toArray(new String[0]);
+    }
+
+    /** Only functional notation — what jairosvg actually routes through the library. */
+    private static String[] buildFunctionalOnly() {
+        return new String[] {
+                "rgb(255, 0, 0)",
+                "rgb(0, 128, 255)",
+                "rgba(255, 0, 0, 0.5)",
+                "rgba(10, 20, 30, 0.75)",
+                "rgb(255 0 0)",
+                "rgb(64 128 255)",
+                "rgb(255 0 0 / 0.5)",
+                "rgb(255 0 0/50%)",
+                "hsl(0, 100%, 50%)",
+                "hsl(120 100% 50%)",
+                "hsl(240 100% 25% / 0.5)",
+                "hwb(0 0% 0%)",
+                "lab(50 20 -30)",
+                "lch(50 30 120)",
+                "oklab(0.5 0.1 -0.1)",
+                "oklch(0.7 0.15 200)",
+                "color(display-p3 1 0 0)"
+        };
     }
 
     private static String[] buildCorpusWithMalformed() {
