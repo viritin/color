@@ -117,37 +117,34 @@ public record RgbColor(int r, int g, int b, double a) implements Color {
     /// @return a RgbColor object representing the parsed color
     ///
     public static RgbColor of(String cssColorString) {
-        // RGB color
-        // remove rgb( or rgba( and
+        // remove rgb(/rgba( prefix and trailing )
         cssColorString = cssColorString.replaceAll("rgba?\\(", "");
-
-        // remove trailing )
         cssColorString = cssColorString.replaceAll("\\)", "");
         String[] parts;
-        if(cssColorString.contains(",")) {
+        if (cssColorString.contains(",")) {
+            // Legacy comma-separated form: rgb(r, g, b) or rgba(r, g, b, a)
             parts = cssColorString.split(",");
         } else {
-            // Handle the case where the color is in the modern format "rgb(r g b)"
-
-            // remove potential / for alpha
-            cssColorString = cssColorString.replaceAll(" /", "");
-            parts = cssColorString.split(" ");
+            // Modern whitespace-separated form (CSS Color 4): rgb(r g b) or
+            // rgb(r g b / a). The slash separator may have optional whitespace
+            // on either side, so normalise it to whitespace before splitting.
+            parts = cssColorString.replace("/", " ").trim().split("\\s+");
         }
 
         if (parts.length < 3 || parts.length > 4) {
             throw new IllegalArgumentException("rgb() requires 3 or 4 components: " + cssColorString);
         }
 
-        double alpha = 1.0; // default alpha value
-        if(parts.length == 4) {
-            // If there are 4 parts, the last one is the alpha value
+        double alpha = 1.0;
+        if (parts.length == 4) {
             alpha = parseAlpha(parts[3].trim());
         }
 
         int r = parseInteger(parts[0].trim());
         int g = parseInteger(parts[1].trim());
         int b = parseInteger(parts[2].trim());
-        return new RgbColor(r, g, b, alpha);    }
+        return new RgbColor(r, g, b, alpha);
+    }
 
     /**
      * Creates a new RgbColor with the same RGB values but a different alpha value.

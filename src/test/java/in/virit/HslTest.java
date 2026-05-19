@@ -1,5 +1,6 @@
 package in.virit;
 
+import in.virit.color.Color;
 import in.virit.color.HslColor;
 import in.virit.color.RgbColor;
 import org.junit.jupiter.api.Test;
@@ -85,5 +86,25 @@ public class HslTest {
         hslColor = hslColor.darken(0.5);
         assertEquals(45, hslColor.l());
 
+    }
+
+    @Test
+    void slashAlphaWithoutSpaces() {
+        // CSS Color 4 allows slash separator with no whitespace around it.
+        HslColor c = HslColor.of("hsl(0 100% 50%/50%)");
+        assertEquals(0, c.h());
+        assertEquals(100, c.s());
+        assertEquals(50, c.l());
+        assertEquals(0.5, c.a(), 0.001);
+    }
+
+    @Test
+    void slashAlphaParsedViaColorParse() {
+        Color c = Color.parseCssColor("hsl(0 100% 50%/50%)");
+        RgbColor rgb = c.toRgbColor();
+        assertEquals(255, rgb.r());
+        assertEquals(0, rgb.g());
+        assertEquals(0, rgb.b());
+        assertEquals(0.5, rgb.a(), 0.001);
     }
 }
