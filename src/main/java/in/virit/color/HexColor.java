@@ -14,11 +14,24 @@ public record HexColor(String hex) implements Color {
      * @param hex Hex color string, e.g. #FF5733 or #FF5733FF
      */
     public HexColor {
-        // Validate the hex color format
-        if (hex == null || !hex.matches("^#([0-9A-Fa-f]{8}|[0-9A-Fa-f]{6}|[0-9A-Fa-f]{3})$")) {
+        if (!isValidHex(hex)) {
             throw new IllegalArgumentException("Invalid hex color format: " + hex);
         }
-        toRgbColor(hex); // Additional validation that the hex color can be converted to RGB, which it really is
+    }
+
+    private static boolean isValidHex(String hex) {
+        if (hex == null) return false;
+        int len = hex.length();
+        // CSS hex colors: #RGB, #RRGGBB, or #RRGGBBAA.
+        if (len != 4 && len != 7 && len != 9) return false;
+        if (hex.charAt(0) != '#') return false;
+        for (int i = 1; i < len; i++) {
+            char c = hex.charAt(i);
+            if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F'))) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static RgbColor toRgbColor(String hex) {

@@ -1,6 +1,10 @@
 package in.virit.color;
 
 
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
 /**
  * Represents a named color with its RGBA value.
  * This class is immutable and thread-safe. Instead of using this class directly,
@@ -314,6 +318,17 @@ public enum NamedColor implements Color {
         this.rgbaValue = HexColor.of(hex).toRgbColor();
     }
 
+    private static final Map<String, NamedColor> BY_NAME = buildLookup();
+
+    private static Map<String, NamedColor> buildLookup() {
+        NamedColor[] values = values();
+        Map<String, NamedColor> map = new HashMap<>(values.length * 2);
+        for (NamedColor nc : values) {
+            map.put(nc.name().toLowerCase(Locale.ROOT), nc);
+        }
+        return map;
+    }
+
     @Override
     public String toString() {
         return name().toLowerCase();
@@ -331,11 +346,9 @@ public enum NamedColor implements Color {
      * @return a NamedColor object representing the parsed color
      */
     public static NamedColor of(String cssColorString) {
-        // Named color
-        for (NamedColor nc : NamedColor.values()) {
-            if (nc.name().toLowerCase().equals(cssColorString)) {
-                return nc;
-            }
+        NamedColor nc = BY_NAME.get(cssColorString);
+        if (nc != null) {
+            return nc;
         }
         throw new IllegalArgumentException("Invalid named color: " + cssColorString);
     }

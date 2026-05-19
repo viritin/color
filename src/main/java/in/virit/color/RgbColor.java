@@ -117,18 +117,21 @@ public record RgbColor(int r, int g, int b, double a) implements Color {
     /// @return a RgbColor object representing the parsed color
     ///
     public static RgbColor of(String cssColorString) {
-        // remove rgb(/rgba( prefix and trailing )
-        cssColorString = cssColorString.replaceAll("rgba?\\(", "");
-        cssColorString = cssColorString.replaceAll("\\)", "");
+        int open = cssColorString.indexOf('(');
+        int close = cssColorString.lastIndexOf(')');
+        if (open < 0 || close <= open) {
+            throw new IllegalArgumentException("Invalid rgb() syntax: " + cssColorString);
+        }
+        String inner = cssColorString.substring(open + 1, close);
         String[] parts;
-        if (cssColorString.contains(",")) {
+        if (inner.indexOf(',') >= 0) {
             // Legacy comma-separated form: rgb(r, g, b) or rgba(r, g, b, a)
-            parts = cssColorString.split(",");
+            parts = inner.split(",");
         } else {
             // Modern whitespace-separated form (CSS Color 4): rgb(r g b) or
             // rgb(r g b / a). The slash separator may have optional whitespace
             // on either side, so normalise it to whitespace before splitting.
-            parts = cssColorString.replace("/", " ").trim().split("\\s+");
+            parts = inner.replace('/', ' ').trim().split("\\s+");
         }
 
         if (parts.length < 3 || parts.length > 4) {

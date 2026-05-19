@@ -246,14 +246,17 @@ public record HslColor(int h, int s, int l, double a) implements Color {
      * @return a new HslColor object
      */
     public static HslColor of(String cssColorString) {
-        // remove hsl(/hsla( prefix and trailing )
-        cssColorString = cssColorString.replaceAll("hsla?\\(", "");
-        cssColorString = cssColorString.replaceAll("\\)", "");
+        int open = cssColorString.indexOf('(');
+        int close = cssColorString.lastIndexOf(')');
+        if (open < 0 || close <= open) {
+            throw new IllegalArgumentException("Invalid hsl() syntax: " + cssColorString);
+        }
         // Normalise both legacy (comma) and modern (slash-alpha) separators
         // to whitespace. The slash separator may have optional whitespace on
         // either side per CSS Color 4, e.g. hsl(0 100% 50%/50%).
-        cssColorString = cssColorString.replace(",", " ").replace("/", " ");
-        String[] parts = cssColorString.trim().split("\\s+");
+        String inner = cssColorString.substring(open + 1, close)
+                .replace(',', ' ').replace('/', ' ');
+        String[] parts = inner.trim().split("\\s+");
 
         if (parts.length < 3 || parts.length > 4) {
             throw new IllegalArgumentException("hsl() requires 3 or 4 components: " + cssColorString);
