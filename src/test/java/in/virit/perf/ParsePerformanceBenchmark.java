@@ -107,7 +107,7 @@ public final class ParsePerformanceBenchmark {
         List<String> list = new ArrayList<>();
         // Named colors are common in SVG.
         Collections.addAll(list,
-                "red", "blue", "black", "white",
+                "red", "blue", "black", "white", "transparent",
                 "green", "yellow", "gray", "orange", "purple",
                 "cornflowerblue", "darkslategray", "lightgoldenrodyellow");
         // 6-digit hex (extremely common).

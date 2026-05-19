@@ -301,6 +301,8 @@ public enum NamedColor implements Color {
     THISTLE("#D8BFD8"),
     /** Tomato color (#FF6347). */
     TOMATO("#FF6347"),
+    /** CSS {@code transparent} keyword — fully transparent black ({@code rgba(0, 0, 0, 0)}). */
+    TRANSPARENT("#00000000"),
     /** Turquoise color (#40E0D0). */
     TURQUOISE("#40E0D0"),
     /** Violet color (#EE82EE). */
