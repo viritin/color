@@ -221,6 +221,10 @@ public record HslColor(int h, int s, int l, double a) implements Color {
 
     /**
      * Creates a variant of this color by shifting the hue to the opposite side of the color wheel.
+     * <p>
+     * This is the color-theory complement (hue + 180° in HSL space). For the
+     * photographic-negative sense — per-channel sRGB inversion — see
+     * {@link Color#negate()}, which is available on every {@link Color}.
      *
      * @return a new HslColor with complemented hue
      */

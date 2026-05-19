@@ -21,6 +21,24 @@ public interface Color {
     RgbColor toRgbColor();
 
     /**
+     * Returns the sRGB negative of this color (per-channel inversion).
+     * Alpha is preserved. Equivalent to a photographic negative.
+     * <p>
+     * Distinct from {@link HslColor#complement()}, which rotates the hue by
+     * 180° in HSL space. The two operations agree on pure primaries (red ↔
+     * cyan, green ↔ magenta, blue ↔ yellow) but diverge elsewhere — mid-gray
+     * inverts to itself but is its own HSL complement too, while white
+     * inverts to black yet stays white under HSL complement.
+     *
+     * @return a new {@link RgbColor} whose RGB channels are {@code 255 - c}
+     *         and whose alpha matches this color's alpha
+     */
+    default RgbColor negate() {
+        RgbColor rgb = toRgbColor();
+        return new RgbColor(255 - rgb.r(), 255 - rgb.g(), 255 - rgb.b(), rgb.a());
+    }
+
+    /**
      * Parses a CSS color string and returns a Color object. Supports:
      * {@code #hex}, {@code rgb()/rgba()}, {@code hsl()/hsla()}, {@code hwb()},
      * {@code lab()}, {@code lch()}, {@code oklab()}, {@code oklch()},
