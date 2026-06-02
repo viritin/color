@@ -24,16 +24,16 @@ public record LchColor(double l, double c, double h, double alpha) implements Co
      */
     public LchColor {
         if (alpha < 0 || alpha > 1) {
-            throw new IllegalArgumentException("Alpha value must be between 0 and 1");
+            throw new ColorParseException("Alpha value must be between 0 and 1");
         }
         if (l < 0 || l > 100) {
-            throw new IllegalArgumentException("Lightness value must be between 0 and 100");
+            throw new ColorParseException("Lightness value must be between 0 and 100");
         }
         if (c < 0) {
-            throw new IllegalArgumentException("Chroma value must be non-negative");
+            throw new ColorParseException("Chroma value must be non-negative");
         }
         if (h < 0 || h > 360) {
-            throw new IllegalArgumentException("Hue value must be between 0 and 360");
+            throw new ColorParseException("Hue value must be between 0 and 360");
         }
     }
 
@@ -99,7 +99,7 @@ public record LchColor(double l, double c, double h, double alpha) implements Co
     public static LchColor of(String cssColorString) {
         String[] parts = ColorMath.splitComponents(cssColorString);
         if (parts.length < 3 || parts.length > 4) {
-            throw new IllegalArgumentException("lch() requires 3 or 4 components: " + cssColorString);
+            throw new ColorParseException("lch() requires 3 or 4 components: " + cssColorString);
         }
         double l = ColorMath.parsePercentOrNumber(parts[0], 100);
         double c = ColorMath.parsePercentOrNumber(parts[1], 150);

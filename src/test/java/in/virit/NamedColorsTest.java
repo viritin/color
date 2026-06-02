@@ -25,6 +25,18 @@ public class NamedColorsTest {
     }
 
     @Test
+    public void caseInsensitiveLookup() {
+        // CSS named colors are case-insensitive. All casings must resolve to the
+        // same enum constant, so consumers (e.g. SVG parsing) need not lowercase
+        // before delegating to the library.
+        assertSame(NamedColor.RED, NamedColor.of("red"));
+        assertSame(NamedColor.RED, NamedColor.of("RED"));
+        assertSame(NamedColor.RED, NamedColor.of("Red"));
+        assertSame(NamedColor.CORNFLOWERBLUE, NamedColor.of("CornflowerBlue"));
+        assertSame(NamedColor.RED, (NamedColor) Color.parseCssColor("ReD"));
+    }
+
+    @Test
     public void transparentKeyword() {
         // CSS Color 4: "transparent" is a shorthand for rgba(0, 0, 0, 0).
         Color parsed = Color.parseCssColor("transparent");

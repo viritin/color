@@ -342,7 +342,13 @@ public enum NamedColor implements Color {
     }
 
     /**
-     * Finds a named color by its name. Css color names are lowercase.
+     * Finds a named color by its name. CSS color names are case-insensitive
+     * ({@code RED}, {@code Red} and {@code red} all resolve to the same color).
+     * <p>
+     * The canonical CSS form is lowercase, so the common case is matched without
+     * allocating: the input is looked up as-is first, and only a failed lookup
+     * pays for a {@code toLowerCase} retry. Callers that have already lowercased
+     * (e.g. SVG attribute parsing) therefore see no extra cost.
      *
      * @param cssColorString the CSS color string to parse
      * @return a NamedColor object representing the parsed color
@@ -352,7 +358,17 @@ public enum NamedColor implements Color {
         if (nc != null) {
             return nc;
         }
-        throw new IllegalArgumentException("Invalid named color: " + cssColorString);
+        // Miss on the as-is lookup: the input may use non-canonical casing.
+        // CSS keywords are ASCII, so Locale.ROOT lowercasing is correct and
+        // avoids the Turkish-i trap.
+        String lower = cssColorString.toLowerCase(Locale.ROOT);
+        if (!lower.equals(cssColorString)) {
+            nc = BY_NAME.get(lower);
+            if (nc != null) {
+                return nc;
+            }
+        }
+        throw new ColorParseException("Invalid named color: " + cssColorString);
     }
 
 }

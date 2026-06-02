@@ -73,6 +73,57 @@ public final class ParsePerformanceBenchmark {
                 () -> driveLenientToRgb(hexOnly, MEASURE_ITERATIONS));
         run("hand-rolled fast path           (hex only — jairosvg-shaped)",
                 () -> driveHandRolledHex(hexOnly, MEASURE_ITERATIONS));
+
+        // "Everything through the library" — the end-state proposed for jairosvg:
+        // drop the inline hex + named fast paths in Colors.color and route ALL
+        // colors (named, hex, functional) through tryParseCssColor().toRgbColor().
+        // This is the number that decides whether those fast paths can go. Run
+        // it on the full mixed corpus and again with ~10% malformed, since real
+        // SVG input is untrusted and the lenient failure cost matters here.
+        System.out.printf(Locale.US, "%nunified library path (drop jairosvg fast paths): full mixed corpus%n");
+        run("lenient tryParseCssColor.toRgbColor (full corpus)",
+                () -> driveLenientToRgb(CORPUS, MEASURE_ITERATIONS));
+        run("lenient tryParseCssColor.toRgbColor (full corpus, ~10% malformed)",
+                () -> driveLenientToRgb(CORPUS_WITH_MALFORMED, MEASURE_ITERATIONS));
+
+        // Named-color lookup in isolation — named colors are the single most
+        // common token in real SVGs, and dropping jairosvg's NAMED_COLORS map
+        // means every one goes through NamedColor.of. The mixed-case corpus
+        // exercises the toLowerCase retry branch (non-canonical casing), the
+        // lowercase corpus the zero-allocation common path.
+        String[] namedLower = buildNamedOnly(false);
+        String[] namedMixed = buildNamedOnly(true);
+        System.out.printf(Locale.US, "%nnamed-color lookup: %d strings%n", namedLower.length);
+        run("strict parseCssColor.toRgbColor   (named, canonical lowercase)",
+                () -> driveStrictToRgb(namedLower, MEASURE_ITERATIONS));
+        run("strict parseCssColor.toRgbColor   (named, mixed case)",
+                () -> driveStrictToRgb(namedMixed, MEASURE_ITERATIONS));
+    }
+
+    /**
+     * Named colors only — the most common token in real SVGs. When
+     * {@code mixedCase} is true the strings use non-canonical casing
+     * ({@code Red}, {@code CornflowerBlue}) to exercise the {@code toLowerCase}
+     * retry branch in {@link in.virit.color.NamedColor#of(String)}.
+     */
+    private static String[] buildNamedOnly(boolean mixedCase) {
+        String[] lower = {
+                "red", "blue", "black", "white", "green", "yellow", "gray",
+                "orange", "purple", "cornflowerblue", "darkslategray",
+                "lightgoldenrodyellow", "transparent", "rebeccapurple",
+                "mediumspringgreen", "navy"
+        };
+        if (!mixedCase) {
+            return lower;
+        }
+        String[] mixed = new String[lower.length];
+        for (int i = 0; i < lower.length; i++) {
+            String s = lower[i];
+            // Capitalise the first char — enough to miss the as-is lookup and
+            // force the lowercase retry without depending on Random.
+            mixed[i] = Character.toUpperCase(s.charAt(0)) + s.substring(1);
+        }
+        return mixed;
     }
 
     private static void warmup() {

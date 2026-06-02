@@ -24,16 +24,16 @@ public record HwbColor(double h, double w, double b, double alpha) implements Co
      */
     public HwbColor {
         if (alpha < 0 || alpha > 1) {
-            throw new IllegalArgumentException("Alpha value must be between 0 and 1");
+            throw new ColorParseException("Alpha value must be between 0 and 1");
         }
         if (h < 0 || h > 360) {
-            throw new IllegalArgumentException("Hue value must be between 0 and 360");
+            throw new ColorParseException("Hue value must be between 0 and 360");
         }
         if (w < 0 || w > 100) {
-            throw new IllegalArgumentException("Whiteness value must be between 0 and 100");
+            throw new ColorParseException("Whiteness value must be between 0 and 100");
         }
         if (b < 0 || b > 100) {
-            throw new IllegalArgumentException("Blackness value must be between 0 and 100");
+            throw new ColorParseException("Blackness value must be between 0 and 100");
         }
     }
 
@@ -112,7 +112,7 @@ public record HwbColor(double h, double w, double b, double alpha) implements Co
     public static HwbColor of(String cssColorString) {
         String[] parts = ColorMath.splitComponents(cssColorString);
         if (parts.length < 3 || parts.length > 4) {
-            throw new IllegalArgumentException("hwb() requires 3 or 4 components: " + cssColorString);
+            throw new ColorParseException("hwb() requires 3 or 4 components: " + cssColorString);
         }
         double h = ColorMath.parseAngle(parts[0]);
         double w = ColorMath.parsePercentOrNumber(parts[1], 100);

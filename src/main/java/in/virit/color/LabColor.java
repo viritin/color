@@ -28,10 +28,10 @@ public record LabColor(double l, double a, double b, double alpha) implements Co
      */
     public LabColor {
         if (alpha < 0 || alpha > 1) {
-            throw new IllegalArgumentException("Alpha value must be between 0 and 1");
+            throw new ColorParseException("Alpha value must be between 0 and 1");
         }
         if (l < 0 || l > 100) {
-            throw new IllegalArgumentException("Lightness value must be between 0 and 100");
+            throw new ColorParseException("Lightness value must be between 0 and 100");
         }
     }
 
@@ -105,7 +105,7 @@ public record LabColor(double l, double a, double b, double alpha) implements Co
     public static LabColor of(String cssColorString) {
         String[] parts = ColorMath.splitComponents(cssColorString);
         if (parts.length < 3 || parts.length > 4) {
-            throw new IllegalArgumentException("lab() requires 3 or 4 components: " + cssColorString);
+            throw new ColorParseException("lab() requires 3 or 4 components: " + cssColorString);
         }
         double l = ColorMath.parsePercentOrNumber(parts[0], 100);
         double a = ColorMath.parsePercentOrNumber(parts[1], 125);

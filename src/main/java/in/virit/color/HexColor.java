@@ -15,15 +15,15 @@ public record HexColor(String hex) implements Color {
      */
     public HexColor {
         if (!isValidHex(hex)) {
-            throw new IllegalArgumentException("Invalid hex color format: " + hex);
+            throw new ColorParseException("Invalid hex color format: " + hex);
         }
     }
 
     private static boolean isValidHex(String hex) {
         if (hex == null) return false;
         int len = hex.length();
-        // CSS hex colors: #RGB, #RRGGBB, or #RRGGBBAA.
-        if (len != 4 && len != 7 && len != 9) return false;
+        // CSS hex colors: #RGB, #RGBA, #RRGGBB, or #RRGGBBAA.
+        if (len != 4 && len != 5 && len != 7 && len != 9) return false;
         if (hex.charAt(0) != '#') return false;
         for (int i = 1; i < len; i++) {
             char c = hex.charAt(i);
@@ -36,11 +36,15 @@ public record HexColor(String hex) implements Color {
 
     private static RgbColor toRgbColor(String hex) {
         int len = hex.length();
-        if (len == 4) {
-            // Short form #RGB: duplicate each digit (0xF -> 0xFF).
+        if (len == 4 || len == 5) {
+            // Short form #RGB / #RGBA: duplicate each digit (0xF -> 0xFF).
             int r = Character.digit(hex.charAt(1), 16) * 17;
             int g = Character.digit(hex.charAt(2), 16) * 17;
             int b = Character.digit(hex.charAt(3), 16) * 17;
+            if (len == 5) {
+                double a = (Character.digit(hex.charAt(4), 16) * 17) / 255.0;
+                return new RgbColor(r, g, b, a);
+            }
             return new RgbColor(r, g, b);
         }
         // 7 or 9: #RRGGBB[AA]. Use the index-based parseInt overload so we

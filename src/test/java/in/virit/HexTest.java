@@ -30,4 +30,18 @@ public class HexTest {
 
     }
 
+    @Test
+    void shortFormWithAlpha() {
+        // CSS Color 4 #RGBA: each digit doubled, so #f608 == #ff660088.
+        HexColor shortHex = new HexColor("#f608");
+        HexColor longHex = new HexColor("#ff660088");
+        assertEquals(longHex.toRgbColor(), shortHex.toRgbColor());
+
+        RgbColor rgb = shortHex.toRgbColor();
+        assertEquals(255, rgb.r());
+        assertEquals(102, rgb.g());
+        assertEquals(0, rgb.b());
+        assertEquals(0x88 / 255.0, rgb.a());
+    }
+
 }

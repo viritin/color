@@ -29,10 +29,10 @@ public record ColorFunction(ColorSpace space, double c1, double c2, double c3, d
      */
     public ColorFunction {
         if (space == null) {
-            throw new IllegalArgumentException("Color space must not be null");
+            throw new ColorParseException("Color space must not be null");
         }
         if (alpha < 0 || alpha > 1) {
-            throw new IllegalArgumentException("Alpha value must be between 0 and 1");
+            throw new ColorParseException("Alpha value must be between 0 and 1");
         }
     }
 
@@ -121,7 +121,7 @@ public record ColorFunction(ColorSpace space, double c1, double c2, double c3, d
     public static ColorFunction of(String cssColorString) {
         String[] parts = ColorMath.splitComponents(cssColorString);
         if (parts.length < 4 || parts.length > 5) {
-            throw new IllegalArgumentException("color() requires a space name and 3 or 4 components: " + cssColorString);
+            throw new ColorParseException("color() requires a space name and 3 or 4 components: " + cssColorString);
         }
         ColorSpace space = ColorSpace.fromCssName(parts[0]);
         double c1 = ColorMath.parsePercentOrNumber(parts[1], 1.0);

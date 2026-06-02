@@ -69,6 +69,6 @@ public enum ColorSpace {
                 return s;
             }
         }
-        throw new IllegalArgumentException("Unknown color space: " + cssName);
+        throw new ColorParseException("Unknown color space: " + cssName);
     }
 }

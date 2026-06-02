@@ -26,16 +26,16 @@ public record HslColor(int h, int s, int l, double a) implements Color {
      */
     public HslColor {
         if (a < 0 || a > 1) {
-            throw new IllegalArgumentException("Alpha value must be between 0 and 1");
+            throw new ColorParseException("Alpha value must be between 0 and 1");
         }
         if (h < 0 || h > 360) {
-            throw new IllegalArgumentException("Hue value must be between 0 and 360");
+            throw new ColorParseException("Hue value must be between 0 and 360");
         }
         if (s < 0 || s > 100) {
-            throw new IllegalArgumentException("Saturation value must be between 0 and 100");
+            throw new ColorParseException("Saturation value must be between 0 and 100");
         }
         if (l < 0 || l > 100) {
-            throw new IllegalArgumentException("Lightness value must be between 0 and 100");
+            throw new ColorParseException("Lightness value must be between 0 and 100");
         }
     }
 
@@ -252,7 +252,7 @@ public record HslColor(int h, int s, int l, double a) implements Color {
     public static HslColor of(String cssColorString) {
         String[] parts = ColorMath.splitComponents(cssColorString);
         if (parts.length < 3 || parts.length > 4) {
-            throw new IllegalArgumentException("hsl() requires 3 or 4 components: " + cssColorString);
+            throw new ColorParseException("hsl() requires 3 or 4 components: " + cssColorString);
         }
         double rawHue = ColorMath.parseAngle(parts[0]);
         // Normalize hue into [0, 360]; CSS allows any angle including negative

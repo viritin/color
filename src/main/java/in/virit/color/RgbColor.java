@@ -24,16 +24,16 @@ public record RgbColor(int r, int g, int b, double a) implements Color {
      */
     public RgbColor {
         if(a < 0 || a > 1) {
-            throw new IllegalArgumentException("Alpha value must be between 0 and 1");
+            throw new ColorParseException("Alpha value must be between 0 and 1");
         }
         if(r < 0 || r > 255) {
-            throw new IllegalArgumentException("Red value must be between 0 and 255");
+            throw new ColorParseException("Red value must be between 0 and 255");
         }
         if(g < 0 || g > 255) {
-            throw new IllegalArgumentException("Green value must be between 0 and 255");
+            throw new ColorParseException("Green value must be between 0 and 255");
         }
         if(b < 0 || b > 255) {
-            throw new IllegalArgumentException("Blue value must be between 0 and 255");
+            throw new ColorParseException("Blue value must be between 0 and 255");
         }
     }
 
@@ -122,7 +122,7 @@ public record RgbColor(int r, int g, int b, double a) implements Color {
     public static RgbColor of(String cssColorString) {
         String[] parts = ColorMath.splitComponents(cssColorString);
         if (parts.length < 3 || parts.length > 4) {
-            throw new IllegalArgumentException("rgb() requires 3 or 4 components: " + cssColorString);
+            throw new ColorParseException("rgb() requires 3 or 4 components: " + cssColorString);
         }
         int r = parseInteger(parts[0]);
         int g = parseInteger(parts[1]);
